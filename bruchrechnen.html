@@ -113,7 +113,7 @@ function gAS(l){
     question:<span>Berechne: <Fc n={n1} d={d1} sz="large"/> {op} <Fc n={n2} d={d2} sz="large"/></span>,
     answer:answerObj,
     check:i=>{
-      if(res.isMixed){const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1}
+      if(res.isMixed){const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;if(iden<=0||inum>=iden)return false;return Math.abs((iw+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1}
       const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;
       return iden>0&&Math.abs(inum/iden-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1
     },
@@ -150,6 +150,7 @@ function gASM(l){
     check:i=>{
       const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;
       if(iden<=0)return false;
+      if(inum>=iden)return false; // Bruchteil muss echter Bruchteil sein (z.B. 13/8 nicht erlaubt)
       const correctVal=res.whole+(res.num>0?res.num/res.den:0);
       const inputVal=iw+(inum>0?inum/iden:0);
       if(Math.abs(inputVal-correctVal)>0.0001)return false;
@@ -207,7 +208,7 @@ function gDiv(l){
     question:<span>Berechne: <Fc n={n1} d={d1} sz="large"/> ÷ <Fc n={n2} d={d2} sz="large"/></span>,
     answer:answerObj,
     check:i=>{
-      if(res.isMixed){const iw3=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw3+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1}
+      if(res.isMixed){const iw3=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;if(iden<=0||inum>=iden)return false;return Math.abs((iw3+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1}
       const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;
       if(iden<=0)return false;
       if(res.isWhole)return Math.abs(inum/iden-res.whole)<0.0001||(inum===res.whole&&iden===1);
