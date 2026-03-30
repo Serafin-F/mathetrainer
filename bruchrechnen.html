@@ -30,6 +30,29 @@ function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 function pk(a){return a[Math.floor(Math.random()*a.length)]}
 function sh(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
 
+// Formatiert ein Ergebnis als vollständig gekürzten Bruch oder gemischte Zahl
+// Gibt {whole, num, den, isWhole, isMixed, value} zurück
+function formatResult(numerator, denominator) {
+  if(denominator === 0) return null;
+  // Erst vollständig kürzen, dann in gemischte Zahl umwandeln
+  const g = gcd(Math.abs(numerator), Math.abs(denominator));
+  const sn = Math.abs(numerator) / g;
+  const sd = Math.abs(denominator) / g;
+  const sign = numerator < 0 ? -1 : 1;
+  const whole = Math.floor(sn / sd);
+  const rem = sn % sd;
+  return {
+    whole: sign * whole,
+    num: rem,
+    den: sd,
+    isWhole: rem === 0,
+    isMixed: whole > 0 && rem > 0,
+    value: sign * sn / sd,
+    sn: sign * (whole > 0 ? rem : sn),
+    sd
+  };
+}
+
 function Fc({n,d,w,sz="normal",s={}}){const fs=sz==="large"?"1.3em":sz==="small"?"0.85em":"1em";const cs={display:"inline-flex",alignItems:"center",gap:"2px",fontSize:fs,verticalAlign:"middle",...s};if(w!==undefined&&w!==0)return<span style={cs}><span style={{fontWeight:600}}>{w}</span>{(n!==undefined&&n!==0)&&<span style={{display:"inline-flex",flexDirection:"column",alignItems:"center",lineHeight:1.1}}><span style={{borderBottom:"2px solid currentColor",padding:"0 3px",fontSize:"0.85em"}}>{n}</span><span style={{padding:"0 3px",fontSize:"0.85em"}}>{d}</span></span>}</span>;if(d===1||d===undefined)return<span style={cs}><span style={{fontWeight:600}}>{n}</span></span>;return<span style={cs}><span style={{display:"inline-flex",flexDirection:"column",alignItems:"center",lineHeight:1.1}}><span style={{borderBottom:"2px solid currentColor",padding:"0 3px"}}>{n}</span><span style={{padding:"0 3px"}}>{d}</span></span></span>}
 
 function FI({value,onChange,showWhole=false,disabled=false,ph={}}){const{whole="",num="",den=""}=value||{};const up=(f,v)=>onChange({...value,whole,num,den,[f]:v.replace(/[^0-9\-]/g,"")});const is={width:"48px",textAlign:"center",border:"2px solid #cbd5e1",borderRadius:"8px",padding:"6px 4px",fontSize:"1.1em",fontWeight:600,background:disabled?"#f1f5f9":"#fff",outline:"none",color:"#1e293b"};return<span style={{display:"inline-flex",alignItems:"center",gap:"6px"}}>{showWhole&&<input style={is} value={whole} onChange={e=>up("whole",e.target.value)} placeholder={ph.whole||"G"} disabled={disabled}/>}<span style={{display:"inline-flex",flexDirection:"column",alignItems:"center",gap:"2px"}}><input style={{...is,width:"52px"}} value={num} onChange={e=>up("num",e.target.value)} placeholder={ph.num||"Z"} disabled={disabled}/><div style={{width:"52px",height:"2px",background:"#64748b"}}/><input style={{...is,width:"52px"}} value={den} onChange={e=>up("den",e.target.value)} placeholder={ph.den||"N"} disabled={disabled}/></span></span>}
@@ -41,32 +64,285 @@ const TOPICS=[{id:"convert",name:"Unechte Brüche ↔ Gemischte Zahlen",icon:"�
 
 function genTask(tid,lv){if(Math.random()<0.25){const v=genVar(tid,lv);if(v)return v}switch(tid){case"convert":return gConv(lv);case"addsub_simple":return gAS(lv);case"addsub_mixed":return gASM(lv);case"simplify":return gSimp(lv);case"divide":return gDiv(lv);case"fraction_of":return gFO(lv);default:return gConv(lv)}}
 
-function gConv(l){if(Math.random()>0.5){const ds=l===1?[2,3,4]:l===2?[3,4,5,6,8]:[4,5,6,7,8,10,12],d=pk(ds),w=ri(1,l===1?3:l===2?7:15),rem=ri(1,d-1),n=w*d+rem,[sn,sd]=simplify(rem,d);return{type:"fraction",showWhole:true,question:<span>Gib <Fc n={n} d={d} sz="large"/> als gemischte Zahl an!</span>,answer:{whole:""+w,num:""+sn,den:""+sd},check:i=>{const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iw===w&&iden>0&&Math.abs(inum/iden-sn/sd)<0.0001},hints:[`${n} ÷ ${d} = ?`,`= ${w} Rest ${rem}`,`${w} ${sn}/${sd}`]}}else{const ds=l===1?[2,3,4]:l===2?[3,4,5,6]:[4,5,6,7,8,10],d=pk(ds),w=ri(1,l===1?3:l===2?6:10),rem=ri(1,d-1),n=w*d+rem;return{type:"fraction",showWhole:false,question:<span>Verwandle {w}<Fc n={rem} d={d} sz="large"/> in einen unechten Bruch!</span>,answer:{num:""+n,den:""+d},check:i=>{const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs(inum/iden-n/d)<0.0001},hints:[`${w} × ${d} = ${w*d}`,`${w*d} + ${rem} = ${n}`,`${n}/${d}`]}}}
+function gConv(l){if(Math.random()>0.5){
+  // Unechter Bruch → gemischte Zahl
+  const ds=l===1?[2,3,4]:l===2?[3,4,5,6,8]:[4,5,6,7,8,10,12],d=pk(ds),w=ri(1,l===1?3:l===2?7:15),rem=ri(1,d-1),n=w*d+rem;
+  const[sn,sd]=simplify(rem,d);
+  return{type:"fraction",showWhole:true,
+    question:<span>Gib <Fc n={n} d={d} sz="large"/> als gemischte Zahl an!</span>,
+    answer:{whole:""+w,num:""+sn,den:""+sd},
+    check:i=>{const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iw===w&&iden>0&&Math.abs(inum/iden-sn/sd)<0.0001},
+    hints:[
+      `Teile ${n} durch ${d}: Wie oft passt ${d} ganz in ${n}?`,
+      `${n} ÷ ${d} = ${w} Rest ${rem} → also ${w} und ${rem}/${d}`,
+      `Ergebnis: ${w} ${sn}/${sd}`
+    ]
+  }
+}else{
+  // Gemischte Zahl → unechter Bruch
+  const ds=l===1?[2,3,4]:l===2?[3,4,5,6]:[4,5,6,7,8,10],d=pk(ds),w=ri(1,l===1?3:l===2?6:10),rem=ri(1,d-1),n=w*d+rem;
+  return{type:"fraction",showWhole:false,
+    question:<span>Verwandle {w}<Fc n={rem} d={d} sz="large"/> in einen unechten Bruch!</span>,
+    answer:{num:""+n,den:""+d},
+    check:i=>{const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs(inum/iden-n/d)<0.0001},
+    hints:[
+      `Multipliziere die ganze Zahl ${w} mit dem Nenner ${d}`,
+      `${w} × ${d} = ${w*d}, dann addiere den Zähler ${rem}: ${w*d} + ${rem} = ${n}`,
+      `Ergebnis: ${n}/${d}`
+    ]
+  }
+}
+}
 
-function gAS(l){const isA=Math.random()>0.4,op=isA?"+":"−";let d1,d2,n1,n2;if(l===1){d2=pk([2,4,8]);d1=d2;n1=ri(1,d1-1);n2=ri(1,d2-1);if(!isA&&n1<n2)[n1,n2]=[n2,n1]}else if(l===2){[d1,d2]=pk([[2,4],[2,8],[4,8],[2,6],[3,6],[3,9]]);n1=ri(1,d1-1);n2=ri(1,d2-1)}else{d1=pk([2,3,4,5,6,7]);d2=pk([3,4,5,6,7,8,9]);if(d1===d2)d2++;n1=ri(1,d1-1);n2=ri(1,d2-1)}const cd=lcm(d1,d2),nn1=n1*(cd/d1),nn2=n2*(cd/d2);let rN=isA?nn1+nn2:nn1-nn2;if(!isA&&nn1<nn2)return gAS(l);if(rN<0)rN=-rN;const[sn,sd]=simplify(rN,cd),aw=sd?Math.floor(Math.abs(sn)/sd):0,ar=sd?Math.abs(sn)%sd:0,nw=aw>0&&ar>0;return{type:"fraction",showWhole:nw,question:<span>Berechne: <Fc n={n1} d={d1} sz="large"/> {op} <Fc n={n2} d={d2} sz="large"/></span>,answer:nw?{whole:""+aw,num:""+ar,den:""+sd}:{num:""+sn,den:""+sd},check:i=>{if(nw){const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw+inum/iden)-(aw+ar/sd))<0.0001}const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs(inum/iden-sn/sd)<0.0001},hints:[d1===d2?`Gleicher Nenner (${d1}).`:`KGV(${d1},${d2}) = ${cd}`,d1!==d2?`${nn1}/${cd} ${op} ${nn2}/${cd}`:`${n1} ${op} ${n2} = ${rN}`,`= ${sn}/${sd}`]}}
+function gAS(l){
+  const isA=Math.random()>0.4,op=isA?"+":"−";
+  let d1,d2,n1,n2;
+  if(l===1){d2=pk([2,4,8]);d1=d2;n1=ri(1,d1-1);n2=ri(1,d2-1);if(!isA&&n1<n2)[n1,n2]=[n2,n1]}
+  else if(l===2){[d1,d2]=pk([[2,4],[2,8],[4,8],[2,6],[3,6],[3,9]]);n1=ri(1,d1-1);n2=ri(1,d2-1)}
+  else{d1=pk([2,3,4,5,6,7]);d2=pk([3,4,5,6,7,8,9]);if(d1===d2)d2++;n1=ri(1,d1-1);n2=ri(1,d2-1)}
+  const cd=lcm(d1,d2),nn1=n1*(cd/d1),nn2=n2*(cd/d2);
+  let rN=isA?nn1+nn2:nn1-nn2;
+  if(!isA&&nn1<nn2)return gAS(l);
+  if(rN<0)rN=-rN;
+  const res=formatResult(rN,cd);
+  if(!res)return gAS(l);
+  // Ergebnis immer vollständig kürzen
+  const answerObj=res.isMixed?{whole:""+res.whole,num:""+res.num,den:""+res.den}:{num:""+res.sn,den:""+res.sd};
+  return{type:"fraction",showWhole:res.isMixed,
+    question:<span>Berechne: <Fc n={n1} d={d1} sz="large"/> {op} <Fc n={n2} d={d2} sz="large"/></span>,
+    answer:answerObj,
+    check:i=>{
+      if(res.isMixed){const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1}
+      const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;
+      return iden>0&&Math.abs(inum/iden-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1
+    },
+    hints:[
+      d1===d2?`Beide Brüche haben denselben Nenner (${d1}) — du kannst die Zähler direkt ${isA?"addieren":"subtrahieren"}.`:`Die Nenner ${d1} und ${d2} sind verschieden → erst gleichnamig machen! Das KGV ist ${cd}.`,
+      d1!==d2?`Erweitere: ${n1}/${d1} = ${nn1}/${cd} und ${n2}/${d2} = ${nn2}/${cd}, dann ${isA?"addiere":"subtrahiere"} die Zähler.`:`${n1} ${op} ${n2} = ${rN} → Ergebnis: ${rN}/${cd}`,
+      `Vollständig gekürzt: ${res.isMixed?`${res.whole} ${res.num}/${res.den}`:`${res.sn}/${res.sd}`}`
+    ]
+  }
+}
 
-function gASM(l){const isA=Math.random()>0.4,op=isA?"+":"−",ds=l===1?[2,4,8]:l===2?[2,3,4,5,6]:[3,4,5,6,7,8,9,10];let d1=pk(ds),d2;if(l===1)d2=d1;else if(l===2)[d1,d2]=pk([[2,4],[2,6],[3,6],[4,8]]);else{d2=pk(ds);if(d1===d2)d2=pk(ds.filter(x=>x!==d1))||d1+1}const w1=ri(1,l===1?5:l===2?7:10),f1=ri(1,d1-1);let w2=ri(1,l===1?3:l===2?5:8);const f2=ri(1,d2-1);if(!isA&&w2>w1)w2=ri(1,w1);if(!isA&&(w1+f1/d1)<(w2+f2/d2))return gASM(l);const cd=lcm(d1,d2),t1=(w1*d1+f1)*(cd/d1),t2=(w2*d2+f2)*(cd/d2),rt=isA?t1+t2:t1-t2,[sn,sd]=simplify(Math.abs(rt),cd),aw=Math.floor(sn/sd),ar=sn%sd,[fn,fd]=ar>0?simplify(ar,sd):[0,1];return{type:"fraction",showWhole:true,question:<span>Berechne: {w1}<Fc n={f1} d={d1} sz="large"/> {op} {w2}<Fc n={f2} d={d2} sz="large"/></span>,answer:{whole:""+aw,num:""+fn,den:ar>0?""+fd:"1"},check:i=>{const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw+inum/iden)-(aw+(ar>0?fn/fd:0)))<0.0001},hints:[d1===d2?"Gleicher Nenner!":`KGV = ${cd}`,`Ganze: ${w1} ${op} ${w2} = ${isA?w1+w2:w1-w2}`,"Bruchteile rechnen + vereinfachen."]}}
+function gASM(l){
+  // Sicherstellen dass BEIDE Operanden echte gemischte Zahlen sind (ganzer Teil ≥ 1, Bruchteil ≥ 1)
+  const isA=Math.random()>0.4,op=isA?"+":"−";
+  const ds=l===1?[2,4,8]:l===2?[2,3,4,5,6]:[3,4,5,6,7,8,9,10];
+  let d1,d2;
+  if(l===1){d1=pk(ds);d2=d1}
+  else if(l===2){[d1,d2]=pk([[2,4],[2,6],[3,6],[4,8]])}
+  else{d1=pk(ds);d2=pk(ds.filter(x=>x!==d1))||d1+1}
+  // Beide müssen mindestens w≥1 und f≥1 haben → echte gemischte Zahlen
+  const w1=ri(1,l===1?5:l===2?7:10);
+  const f1=ri(1,d1-1); // f1 immer ≥ 1 → echter Bruchteil
+  let w2=ri(1,l===1?3:l===2?5:8);
+  const f2=ri(1,d2-1); // f2 immer ≥ 1 → echter Bruchteil
+  if(!isA&&w2>w1)w2=ri(1,w1);
+  if(!isA&&(w1+f1/d1)<(w2+f2/d2))return gASM(l);
+  const cd=lcm(d1,d2),t1=(w1*d1+f1)*(cd/d1),t2=(w2*d2+f2)*(cd/d2),rt=isA?t1+t2:t1-t2;
+  const res=formatResult(Math.abs(rt),cd);
+  if(!res)return gASM(l);
+  const answerObj={whole:""+res.whole,num:""+res.num,den:res.num>0?""+res.den:"1"};
+  return{type:"fraction",showWhole:true,
+    question:<span>Berechne: {w1}<Fc n={f1} d={d1} sz="large"/> {op} {w2}<Fc n={f2} d={d2} sz="large"/></span>,
+    answer:answerObj,
+    check:i=>{
+      const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;
+      if(iden<=0)return false;
+      const correctVal=res.whole+(res.num>0?res.num/res.den:0);
+      const inputVal=iw+(inum>0?inum/iden:0);
+      if(Math.abs(inputVal-correctVal)>0.0001)return false;
+      if(inum>0&&gcd(Math.abs(inum),iden)!==1)return false;
+      return true;
+    },
+    hints:[
+      d1===d2?`Gleicher Nenner (${d1}) — rechne zuerst die ganzen Zahlen: ${w1} ${op} ${w2}`:`Verschiedene Nenner → KGV(${d1}, ${d2}) = ${cd}. Wandle beide Bruchteile auf den Nenner ${cd} um.`,
+      `Ganze Zahlen: ${w1} ${op} ${w2} = ${isA?w1+w2:w1-w2}. Bruchteile: ${f1*(cd/d1)}/${cd} ${op} ${f2*(cd/d2)}/${cd} = ${isA?f1*(cd/d1)+f2*(cd/d2):f1*(cd/d1)-f2*(cd/d2)}/${cd}`,
+      `Vollständig gekürzt: ${res.whole}${res.num>0?" "+res.num+"/"+res.den:""}`
+    ]
+  }
+}
 
-function gSimp(l){let n,d;if(l===1){const bd=pk([2,5,10]),f=pk([2,5,10]);n=bd===2?f:pk([1,2,3])*f;d=bd*f;if(n>=d)n=pk([1,2])*f}else if(l===2){const s=pk([1,2,3,5,7]),sd2=pk([2,3,4,5,6,7]),f=pk([2,3,4,5,6]);n=s*f;d=sd2*f}else{const s=pk([1,2,3,4,5,7,8]),sd3=pk([3,4,5,6,7,9,11,12]),f=pk([3,4,5,6,7,8,9,10]);n=s*f;d=sd3*f}if(n===d||n===0||gcd(n,d)===1)return gSimp(l);const[sn,sd]=simplify(n,d),aw=sd>0?Math.floor(sn/sd):0,ar=sd>0?sn%sd:0,nw=aw>0&&ar>0,iw=ar===0&&aw>0;return{type:"fraction",showWhole:nw,question:<span>Kürze <Fc n={n} d={d} sz="large"/> so weit wie möglich!</span>,answer:nw?{whole:""+aw,num:""+ar,den:""+sd}:iw?{num:""+aw,den:"1"}:{num:""+sn,den:""+sd},check:i=>{if(nw){const iw2=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw2+inum/iden)-sn/sd)<0.0001&&gcd(Math.abs(inum),Math.abs(iden))===1}const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;if(iden<=0)return false;if(iw)return inum===aw&&iden===1;return Math.abs(inum/iden-sn/sd)<0.0001&&gcd(Math.abs(inum),Math.abs(iden))===1},hints:[`ggT(${n},${d}) = ${gcd(n,d)}`,`÷ ${gcd(n,d)}`,`= ${sn}/${sd}`]}}
+function gSimp(l){
+  let n,d;
+  if(l===1){const bd=pk([2,5,10]),f=pk([2,5,10]);n=bd===2?f:pk([1,2,3])*f;d=bd*f;if(n>=d)n=pk([1,2])*f}
+  else if(l===2){const s=pk([1,2,3,5,7]),sd2=pk([2,3,4,5,6,7]),f=pk([2,3,4,5,6]);n=s*f;d=sd2*f}
+  else{const s=pk([1,2,3,4,5,7,8]),sd3=pk([3,4,5,6,7,9,11,12]),f=pk([3,4,5,6,7,8,9,10]);n=s*f;d=sd3*f}
+  if(n===d||n===0||gcd(n,d)===1)return gSimp(l);
+  const g=gcd(n,d);
+  const[sn,sd]=simplify(n,d);
+  const res=formatResult(sn,sd);
+  if(!res)return gSimp(l);
+  const answerObj=res.isMixed?{whole:""+res.whole,num:""+res.num,den:""+res.den}:res.isWhole?{num:""+res.whole,den:"1"}:{num:""+res.sn,den:""+res.sd};
+  return{type:"fraction",showWhole:res.isMixed,
+    question:<span>Kürze <Fc n={n} d={d} sz="large"/> so weit wie möglich!</span>,
+    answer:answerObj,
+    check:i=>{
+      if(res.isMixed){const iw2=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw2+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),Math.abs(iden))===1}
+      const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;
+      if(iden<=0)return false;
+      if(res.isWhole)return Math.abs(inum/iden-res.whole)<0.0001||(inum===res.whole&&iden===1);
+      return Math.abs(inum/iden-res.value)<0.0001&&gcd(Math.abs(inum),Math.abs(iden))===1
+    },
+    hints:[
+      `Was ist der größte gemeinsame Teiler (ggT) von ${n} und ${d}? Welche Zahl teilt beide?`,
+      `ggT(${n}, ${d}) = ${g} — teile Zähler und Nenner durch ${g}: ${n}÷${g} = ${sn}, ${d}÷${g} = ${sd}`,
+      `Vollständig gekürzt: ${res.isMixed?`${res.whole} ${res.num}/${res.den}`:res.isWhole?`${res.whole}`:`${res.sn}/${res.sd}`}`
+    ]
+  }
+}
 
-function gDiv(l){let n1,d1,n2,d2;if(l===1){d1=pk([2,3,4,5]);n1=ri(1,d1);d2=pk([2,3,4,5]);n2=ri(1,d2)}else if(l===2){d1=pk([2,3,4,5,6,7,8]);n1=ri(1,d1);d2=pk([2,3,4,5,6,7,8]);n2=ri(1,d2)}else{d1=pk([3,4,5,6,7,8,10,12]);n1=ri(2,d1);d2=pk([3,4,5,6,7,8,9,10]);n2=ri(2,d2)}if(n2===0)n2=1;const rN=n1*d2,rD=d1*n2,[sn,sd]=simplify(rN,rD),aw=Math.floor(sn/sd),ar=sn%sd,nw=aw>0&&ar>0,iw2=ar===0;return{type:"fraction",showWhole:nw,question:<span>Berechne: <Fc n={n1} d={d1} sz="large"/> ÷ <Fc n={n2} d={d2} sz="large"/></span>,answer:nw?{whole:""+aw,num:""+ar,den:""+sd}:iw2?{num:""+aw,den:"1"}:{num:""+sn,den:""+sd},check:i=>{if(nw){const iw3=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw3+inum/iden)-sn/sd)<0.0001}const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;if(iden<=0)return false;if(iw2)return Math.abs(inum/iden-aw)<0.0001||(inum===aw&&iden===1);return Math.abs(inum/iden-sn/sd)<0.0001},hints:[`Kehrwert: ${d2}/${n2}`,`${n1}/${d1} × ${d2}/${n2} = ${rN}/${rD}`,`= ${sn}/${sd}`]}}
+function gDiv(l){
+  let n1,d1,n2,d2;
+  if(l===1){d1=pk([2,3,4,5]);n1=ri(1,d1);d2=pk([2,3,4,5]);n2=ri(1,d2)}
+  else if(l===2){d1=pk([2,3,4,5,6,7,8]);n1=ri(1,d1);d2=pk([2,3,4,5,6,7,8]);n2=ri(1,d2)}
+  else{d1=pk([3,4,5,6,7,8,10,12]);n1=ri(2,d1);d2=pk([3,4,5,6,7,8,9,10]);n2=ri(2,d2)}
+  if(n2===0)n2=1;
+  const rN=n1*d2,rD=d1*n2;
+  const res=formatResult(rN,rD);
+  if(!res)return gDiv(l);
+  const answerObj=res.isMixed?{whole:""+res.whole,num:""+res.num,den:""+res.den}:res.isWhole?{num:""+res.whole,den:"1"}:{num:""+res.sn,den:""+res.sd};
+  return{type:"fraction",showWhole:res.isMixed,
+    question:<span>Berechne: <Fc n={n1} d={d1} sz="large"/> ÷ <Fc n={n2} d={d2} sz="large"/></span>,
+    answer:answerObj,
+    check:i=>{
+      if(res.isMixed){const iw3=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw3+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1}
+      const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;
+      if(iden<=0)return false;
+      if(res.isWhole)return Math.abs(inum/iden-res.whole)<0.0001||(inum===res.whole&&iden===1);
+      return Math.abs(inum/iden-res.value)<0.0001&&gcd(Math.abs(inum),iden)===1
+    },
+    hints:[
+      `Bei Division durch einen Bruch: mit dem Kehrwert multiplizieren! Der Kehrwert von ${n2}/${d2} ist ${d2}/${n2}.`,
+      `${n1}/${d1} × ${d2}/${n2} = ${rN}/${rD} — jetzt kürzen: ggT(${rN}, ${rD}) = ${gcd(rN,rD)}`,
+      `Vollständig gekürzt: ${res.isMixed?`${res.whole} ${res.num}/${res.den}`:res.isWhole?`${res.whole}`:`${res.sn}/${res.sd}`}`
+    ]
+  }
+}
 
-function gFO(l){if(Math.random()>0.4){const u=pk(["kg","m","cm","l","g","t","h"]),d=l===1?pk([2,3,4,5]):l===2?pk([3,4,5,6,7,8]):pk([4,5,6,7,8,9]),n=ri(1,d-1);let wh=ri(2,l===1?30:l===2?60:100);while(wh%d!==0)wh=ri(2,l===1?30:l===2?60:100);const res=(n*wh)/d;return{type:"number",question:<span>Berechne: <Fc n={n} d={d} sz="large"/> von {wh} {u}</span>,answer:res,unit:u,check:i=>Math.abs(parseFloat(i)-res)<0.01,hints:[`${n}/${d} × ${wh}`,`${wh} ÷ ${d} = ${wh/d}`,`= ${res} ${u}`]}}else{const u=pk(["€","m","kg","dag","h","t","g"]),d=l===1?pk([2,3,4]):l===2?pk([3,4,5,6,8]):pk([4,5,6,7,8,9]),n=ri(1,d-1),rw=ri(2,l===1?20:l===2?50:80),part=rw*n,wh=rw*d;return{type:"number",question:<span><Fc n={n} d={d} sz="large"/> sind {part} {u}. Berechne das Ganze!</span>,answer:wh,unit:u,check:i=>Math.abs(parseFloat(i)-wh)<0.01,hints:[`${part} ÷ ${n} = ${rw}`,`${rw} × ${d} = ${wh}`,`= ${wh} ${u}`]}}}
+function gFO(l){
+  if(Math.random()>0.4){
+    const u=pk(["kg","m","cm","l","g","t","h"]),d=l===1?pk([2,3,4,5]):l===2?pk([3,4,5,6,7,8]):pk([4,5,6,7,8,9]),n=ri(1,d-1);
+    let wh=ri(2,l===1?30:l===2?60:100);
+    while(wh%d!==0)wh=ri(2,l===1?30:l===2?60:100);
+    const res=(n*wh)/d;
+    return{type:"number",
+      question:<span>Berechne: <Fc n={n} d={d} sz="large"/> von {wh} {u}</span>,
+      answer:res,unit:u,
+      check:i=>Math.abs(parseFloat(i)-res)<0.01,
+      hints:[
+        `„Bruchteil von einer Zahl" bedeutet: Zahl durch Nenner, dann mal Zähler.`,
+        `Zuerst: ${wh} ÷ ${d} = ${wh/d} ${u} (das ist 1/${d} von ${wh})`,
+        `Dann: ${wh/d} × ${n} = ${res} ${u}`
+      ]
+    }
+  }else{
+    const u=pk(["€","m","kg","dag","h","t","g"]),d=l===1?pk([2,3,4]):l===2?pk([3,4,5,6,8]):pk([4,5,6,7,8,9]),n=ri(1,d-1),rw=ri(2,l===1?20:l===2?50:80),part=rw*n,wh=rw*d;
+    return{type:"number",
+      question:<span><Fc n={n} d={d} sz="large"/> sind {part} {u}. Berechne das Ganze!</span>,
+      answer:wh,unit:u,
+      check:i=>Math.abs(parseFloat(i)-wh)<0.01,
+      hints:[
+        `Wenn ${n}/${d} gleich ${part} ${u} ist — was ist dann 1/${d}?`,
+        `1/${d} entspricht: ${part} ÷ ${n} = ${rw} ${u}`,
+        `Das Ganze (${d}/${d}): ${rw} × ${d} = ${wh} ${u}`
+      ]
+    }
+  }
+}
 
 /* ═══ VARIATION GENERATORS ═══ */
-function genVar(tid,l){const t=pk(["mc","error","compare"]);if(t==="mc")return gMC(tid,l);if(t==="error")return gErr(tid,l);return gComp(l)}
+function genVar(tid,l){const opts=tid==="addsub_mixed"?["mc","error"]:["mc","error","compare"];const t=pk(opts);if(t==="mc")return gMC(tid,l);if(t==="error")return gErr(tid,l);return gComp(l)}
 
-function gMC(tid,l){if(tid==="simplify"){const f=pk([2,3,4,5,6]),sn=ri(1,7),sd=ri(sn+1,12);if(gcd(sn,sd)!==1)return null;const n=sn*f,d=sd*f,co=`${sn}/${sd}`,wr=[`${n}/${sd}`,`${sn}/${d}`,`${Math.min(sn+1,sd-1)}/${sd}`];const opts=sh([co,...wr].filter((v,i,a)=>a.indexOf(v)===i)).slice(0,4);if(opts.length<3)return null;return{type:"mc",question:<span>Welcher Bruch ist die gekürzte Form von <Fc n={n} d={d} sz="large"/>?</span>,options:opts,correctOption:co,hints:[`ggT(${n},${d}) = ${f}`,`${n}÷${f} = ${sn}, ${d}÷${f} = ${sd}`,`= ${sn}/${sd}`]}}if(tid==="convert"){const d=pk([2,3,4,5,6]),w=ri(1,5),rem=ri(1,d-1),n=w*d+rem,co=`${w} ${rem}/${d}`,wr=[`${w+1} ${rem}/${d}`,`${w} ${(rem%d)+1}/${d}`,`${Math.max(w-1,1)} ${rem}/${d}`];return{type:"mc",question:<span>Was ist <Fc n={n} d={d} sz="large"/> als gemischte Zahl?</span>,options:sh([co,...wr]).slice(0,4),correctOption:co,hints:[`${n} ÷ ${d} = ?`,`= ${w} Rest ${rem}`,`= ${co}`]}}return null}
+function gMC(tid,l){
+  if(tid==="simplify"){
+    const f=pk([2,3,4,5,6]),sn=ri(1,7),sd=ri(sn+1,12);
+    if(gcd(sn,sd)!==1)return null;
+    const n=sn*f,d=sd*f,co=`${sn}/${sd}`,wr=[`${n}/${sd}`,`${sn}/${d}`,`${Math.min(sn+1,sd-1)}/${sd}`];
+    const opts=sh([co,...wr].filter((v,i,a)=>a.indexOf(v)===i)).slice(0,4);
+    if(opts.length<3)return null;
+    return{type:"mc",
+      question:<span>Welcher Bruch ist die vollständig gekürzte Form von <Fc n={n} d={d} sz="large"/>?</span>,
+      options:opts,correctOption:co,
+      hints:[
+        `Suche die größte Zahl, die sowohl ${n} als auch ${d} teilt (ggT).`,
+        `ggT(${n}, ${d}) = ${f} — teile beide durch ${f}.`,
+        `Richtig gekürzt: ${sn}/${sd}`
+      ]
+    }
+  }
+  if(tid==="convert"){
+    const d=pk([2,3,4,5,6]),w=ri(1,5),rem=ri(1,d-1),n=w*d+rem,co=`${w} ${rem}/${d}`,wr=[`${w+1} ${rem}/${d}`,`${w} ${(rem%d)+1}/${d}`,`${Math.max(w-1,1)} ${rem}/${d}`];
+    return{type:"mc",
+      question:<span>Was ist <Fc n={n} d={d} sz="large"/> als gemischte Zahl?</span>,
+      options:sh([co,...wr]).slice(0,4),correctOption:co,
+      hints:[
+        `Teile den Zähler (${n}) durch den Nenner (${d}).`,
+        `${n} ÷ ${d} = ${w} Rest ${rem}`,
+        `Richtig: ${co}`
+      ]
+    }
+  }
+  return null
+}
 
-function gErr(tid,l){if(tid==="addsub_simple"||tid==="addsub_mixed"){const d1=pk([2,3,4]),d2=pk([3,4,6]);if(d1===d2)return null;const n1=ri(1,d1-1),n2=ri(1,d2-1),cd=lcm(d1,d2),wN=n1+n2,wD=d1+d2,cN=n1*(cd/d1)+n2*(cd/d2),[sn,sd]=simplify(cN,cd);return{type:"mc",question:<span>🔍 <b>Fehler finden:</b> Ein Schüler rechnet:<br/><Fc n={n1} d={d1} sz="large"/> + <Fc n={n2} d={d2} sz="large"/> = <Fc n={wN} d={wD} sz="large"/><br/>Was stimmt nicht?</span>,options:sh(["Die Brüche wurden nicht gleichnamig gemacht","Der Bruch wurde nicht gekürzt","Die Rechnung stimmt so","Zähler und Nenner wurden einfach addiert"]),correctOption:"Die Brüche wurden nicht gleichnamig gemacht",hints:[`Verschiedene Nenner → erst gleichnamig machen!`,`Gemeinsamer Nenner: ${cd}`,`Richtig: ${sn}/${sd}`]}}if(tid==="divide"){const n1=ri(1,5),d1=pk([2,3,4,5]),n2=ri(1,4),d2=pk([2,3,4,5]),wN=n1*n2,wD=d1*d2,[sn,sd]=simplify(n1*d2,d1*n2);return{type:"mc",question:<span>🔍 <b>Fehler finden:</b> Ein Schüler rechnet:<br/><Fc n={n1} d={d1} sz="large"/> ÷ <Fc n={n2} d={d2} sz="large"/> = <Fc n={wN} d={wD} sz="large"/><br/>Was ist der Fehler?</span>,options:sh(["Statt mit dem Kehrwert wurde direkt multipliziert","Der Bruch wurde nicht gekürzt","Die Rechnung stimmt so","Zähler und Nenner wurden vertauscht"]),correctOption:"Statt mit dem Kehrwert wurde direkt multipliziert",hints:["Bei Division → Kehrwert!",`Kehrwert von ${n2}/${d2} = ${d2}/${n2}`,`Richtig: ${sn}/${sd}`]}}return null}
+function gErr(tid,l){
+  if(tid==="addsub_simple"||tid==="addsub_mixed"){
+    const d1=pk([2,3,4]),d2=pk([3,4,6]);
+    if(d1===d2)return null;
+    const n1=ri(1,d1-1),n2=ri(1,d2-1),cd=lcm(d1,d2),wN=n1+n2,wD=d1+d2,cN=n1*(cd/d1)+n2*(cd/d2);
+    const res=formatResult(cN,cd);
+    if(!res)return null;
+    return{type:"mc",
+      question:<span>🔍 <b>Fehler finden:</b> Ein Schüler rechnet:<br/><Fc n={n1} d={d1} sz="large"/> + <Fc n={n2} d={d2} sz="large"/> = <Fc n={wN} d={wD} sz="large"/><br/>Was stimmt nicht?</span>,
+      options:sh(["Die Brüche wurden nicht gleichnamig gemacht","Der Bruch wurde nicht gekürzt","Die Rechnung stimmt so","Zähler und Nenner wurden einfach addiert"]),
+      correctOption:"Die Brüche wurden nicht gleichnamig gemacht",
+      hints:[
+        `Schau dir die Nenner an: ${d1} und ${d2} sind verschieden. Was muss man zuerst tun?`,
+        `Bei verschiedenen Nennern muss man erst gleichnamig machen (gemeinsamen Nenner finden).`,
+        `Richtig: KGV(${d1},${d2})=${cd}, also ${res.sn}/${res.sd}`
+      ]
+    }
+  }
+  if(tid==="divide"){
+    const n1=ri(1,5),d1=pk([2,3,4,5]),n2=ri(1,4),d2=pk([2,3,4,5]),wN=n1*n2,wD=d1*d2;
+    const res=formatResult(n1*d2,d1*n2);
+    if(!res)return null;
+    return{type:"mc",
+      question:<span>🔍 <b>Fehler finden:</b> Ein Schüler rechnet:<br/><Fc n={n1} d={d1} sz="large"/> ÷ <Fc n={n2} d={d2} sz="large"/> = <Fc n={wN} d={wD} sz="large"/><br/>Was ist der Fehler?</span>,
+      options:sh(["Statt mit dem Kehrwert wurde direkt multipliziert","Der Bruch wurde nicht gekürzt","Die Rechnung stimmt so","Zähler und Nenner wurden vertauscht"]),
+      correctOption:"Statt mit dem Kehrwert wurde direkt multipliziert",
+      hints:[
+        `Was ist die Regel beim Dividieren von Brüchen?`,
+        `Bei Division muss man mit dem Kehrwert multiplizieren. Der Kehrwert von ${n2}/${d2} ist ${d2}/${n2}.`,
+        `Richtig: ${n1}/${d1} × ${d2}/${n2} = ${res.sn}/${res.sd}`
+      ]
+    }
+  }
+  return null
+}
 
-function gComp(l){const d1=pk(l===1?[2,3,4]:[2,3,4,5,6,8]),d2=pk(l===1?[2,3,4]:[3,4,5,6,7,8]),n1=ri(1,d1-1),n2=ri(1,d2-1),v1=n1/d1,v2=n2/d2;if(Math.abs(v1-v2)<0.01)return gComp(l);const co=v1>v2?`${n1}/${d1}`:`${n2}/${d2}`;return{type:"mc",question:<span>Welcher Bruch ist <b>größer</b>?</span>,options:[`${n1}/${d1}`,`${n2}/${d2}`,"Beide gleich groß"],correctOption:co,hints:["Mach die Brüche gleichnamig.",`${n1}/${d1} ≈ ${v1.toFixed(3)}, ${n2}/${d2} ≈ ${v2.toFixed(3)}`,`${co} ist größer.`]}}
+function gComp(l){
+  const d1=pk(l===1?[2,3,4]:[2,3,4,5,6,8]),d2=pk(l===1?[2,3,4]:[3,4,5,6,7,8]),n1=ri(1,d1-1),n2=ri(1,d2-1),v1=n1/d1,v2=n2/d2;
+  if(Math.abs(v1-v2)<0.01)return gComp(l);
+  const co=v1>v2?`${n1}/${d1}`:`${n2}/${d2}`;
+  const cd=lcm(d1,d2);
+  return{type:"mc",
+    question:<span>Welcher Bruch ist <b>größer</b>?</span>,
+    options:[`${n1}/${d1}`,`${n2}/${d2}`,"Beide gleich groß"],
+    correctOption:co,
+    hints:[
+      `Mach beide Brüche gleichnamig: Was ist das KGV von ${d1} und ${d2}?`,
+      `KGV(${d1},${d2}) = ${cd}: ${n1}/${d1} = ${n1*(cd/d1)}/${cd} und ${n2}/${d2} = ${n2*(cd/d2)}/${cd}`,
+      `${co} ist größer.`
+    ]
+  }
+}
 
 /* ═══ BONUS GENERATORS ═══ */
 function gBonus(){const r=Math.random();return r<0.33?gDigitPuzzle():r<0.66?gMaxMin():gTargetChallenge()}
 
 function gDigitPuzzle(){
-  // 4 digits to place into ▢/▢ + ▢/▢ so it equals a given result
   const puzzles=[
     {digits:[1,2,3,4],op:"+",targetN:10,targetD:12,targetLabel:"10/12",checkAll:(a,b,c,d)=>{return Math.abs(a/b+c/d-10/12)<0.0001}},
     {digits:[1,2,3,6],op:"+",targetN:1,targetD:1,targetLabel:"1",checkAll:(a,b,c,d)=>{return Math.abs(a/b+c/d-1)<0.0001}},
@@ -88,26 +364,21 @@ function gDigitPuzzle(){
       return Math.abs(n1/d1-n2/d2-p.targetN/p.targetD)<0.0001;
     },
     hints:[
-      `Du brauchst die Ziffern ${p.digits.join(", ")} — jede genau einmal.`,
-      `Überlege: Welche Ziffern passen als Nenner? Probiere verschiedene Kombinationen.`,
-      `Tipp: Beginne mit kleinen Nennern und schau, ob die Zähler passen.`
+      `Du brauchst die Ziffern ${p.digits.join(", ")} — jede genau einmal. Überlege welche als Nenner passen.`,
+      `Probiere verschiedene Kombinationen — welche Nenner ergeben zusammen ein sinnvolles Ergebnis?`,
+      `Tipp: Beginne mit kleinen Nennern und prüfe ob die Zähler dann passen.`
     ]
   };
 }
 
 function gMaxMin(){
   const challenges=[
-    {digits:[1,2,3],slots:2,question:"Setze die Ziffern 1, 2, 3 ein:\n▢/▢ + ▢\nWas ergibt das Größte?",
-      build:(a,b,c)=>a/b+c,type:"max",label:"▢/▢ + ▢",ds:[1,2,3]},
-    {digits:[2,3,4,5],slots:4,question:"Setze 2, 3, 4, 5 ein:\n▢/▢ + ▢/▢\nWas ergibt das Größte?",
-      build:null,type:"max",label:"▢/▢ + ▢/▢",ds:[2,3,4,5]},
-    {digits:[1,2,4,8],slots:4,question:"Setze 1, 2, 4, 8 ein:\n▢/▢ + ▢/▢\nWas ergibt das Kleinste?",
-      build:null,type:"min",label:"▢/▢ + ▢/▢",ds:[1,2,4,8]},
-    {digits:[2,3,5],slots:2,question:"Setze 2, 3, 5 ein:\n▢/▢ + ▢\nWas ergibt das Kleinste?",
-      build:(a,b,c)=>a/b+c,type:"min",label:"▢/▢ + ▢",ds:[2,3,5]},
+    {digits:[2,3,4,5],type:"max",label:"▢/▢ + ▢/▢",ds:[2,3,4,5]},
+    {digits:[1,2,4,8],type:"min",label:"▢/▢ + ▢/▢",ds:[1,2,4,8]},
+    {digits:[1,3,5,7],type:"max",label:"▢/▢ + ▢/▢",ds:[1,3,5,7]},
+    {digits:[2,4,6,8],type:"min",label:"▢/▢ + ▢/▢",ds:[2,4,6,8]},
   ];
   const ch=pk(challenges);
-  // Pre-calculate the best answer by trying all permutations
   const perms=[];
   function permute(arr,l=[]){if(arr.length===0){perms.push(l);return}for(let i=0;i<arr.length;i++)permute([...arr.slice(0,i),...arr.slice(i+1)],[...l,arr[i]])}
   permute(ch.ds);
@@ -128,22 +399,15 @@ function gMaxMin(){
       if(isNaN(n1)||isNaN(d1)||isNaN(n2)||isNaN(d2))return false;
       if(d1===0||(d2!==undefined&&d2===0))return false;
       let used,val;
-      if(ch.ds.length===3){
-        // ▢/▢ + ▢ format: den of second = 1, num of second = whole number
-        used=[n1,d1,n2].sort().join(",");
-        val=n1/d1+n2;
-      }else{
-        if(d2===0)return false;
-        used=[n1,d1,n2,d2].sort().join(",");
-        val=n1/d1+n2/d2;
-      }
+      if(ch.ds.length===3){used=[n1,d1,n2].sort().join(",");val=n1/d1+n2;}
+      else{if(d2===0)return false;used=[n1,d1,n2,d2].sort().join(",");val=n1/d1+n2/d2;}
       const need=[...ch.ds].sort().join(",");
       if(used!==need)return false;
       return Math.abs(val-bestVal)<0.0001;
     },
     hints:[
-      `Überlege: ${ch.type==="max"?"Große Zähler und kleine Nenner ergeben große Brüche.":"Kleine Zähler und große Nenner ergeben kleine Brüche."}`,
-      `Probiere verschiedene Anordnungen der Ziffern ${ch.ds.join(", ")}.`,
+      `${ch.type==="max"?"Große Zähler und kleine Nenner ergeben große Brüche.":"Kleine Zähler und große Nenner ergeben kleine Brüche."} Probiere verschiedene Anordnungen.`,
+      `Versuche alle Möglichkeiten systematisch — es gibt nur wenige Kombinationen.`,
       `Das beste Ergebnis ist ${bestRounded}.`
     ]
   };
@@ -156,7 +420,6 @@ function gTargetChallenge(){
     {n:2,d:1,label:"2",digits:[1,3,4,5]},
   ];
   const t=pk(targets);
-  // Find closest possible value
   const perms2=[];
   function perm2(arr,l=[]){if(arr.length===0){perms2.push(l);return}for(let i=0;i<arr.length;i++)perm2([...arr.slice(0,i),...arr.slice(i+1)],[...l,arr[i]])}
   perm2(t.digits);
@@ -183,8 +446,8 @@ function gTargetChallenge(){
       return Math.abs(n1/d1+n2/d2-t.n/t.d);
     },
     hints:[
-      `Probiere verschiedene Anordnungen der Ziffern.`,
-      `Große Zähler + kleine Nenner = größerer Wert. Und umgekehrt.`,
+      `Probiere verschiedene Anordnungen der Ziffern ${t.digits.join(", ")}.`,
+      `Große Zähler + kleine Nenner = größerer Wert, kleine Zähler + große Nenner = kleinerer Wert.`,
       `Die bestmögliche Lösung hat Abstand ${Math.round(closest*1000)/1000} von ${t.label}.`
     ]
   };
@@ -210,11 +473,21 @@ function App(){
     if(res.length>=MT){toSum();return}
     let gr=0;for(let i=res.length-1;i>=0;i--){if(res[i].star==="gold")gr++;else break}
     let wr=0;for(let i=res.length-1;i>=0;i--){if(!res[i].correct)wr++;else break}
-    let nl=lv;if(gr>=GS){if(lv>=3){toSum();return}nl=lv+1;setStk(0);setWs(0)}else if(wr>=WS&&lv>1){nl=lv-1;setWs(0);setStk(0)}
+    let nl=lv;if(gr>=GS){if(lv>=3&&res.length>=9){toSum();return}if(lv>=3){}else{nl=lv+1;setStk(0);setWs(0)}}else if(wr>=WS&&lv>1){nl=lv-1;setWs(0);setStk(0)}
     setLv(nl);setTask(genTask(ct,nl));reset();setTi(ti+1);
   };
   const check=()=>{
-    if(!task)return;let ok=false;
+    if(!task)return;
+    // Nenner 0 ist mathematisch nicht erlaubt → sofort Fehler
+    if(task.type!=="mc"&&task.type!=="number"){
+      const iden=parseInt(inp.den);
+      const iden2=parseInt(inp2?.den);
+      if(iden===0||(task.type==="dual"&&iden2===0)||(task.type==="target"&&iden2===0)){
+        setFb({correct:false,showSolution:false,msg:"Der Nenner darf nicht 0 sein! (Division durch 0 ist nicht erlaubt)"});
+        return;
+      }
+    }
+    let ok=false;
     if(task.type==="mc")ok=mcSel===task.correctOption;
     else if(task.type==="target"){
       const dist=task.getDistance(inp,inp2);
