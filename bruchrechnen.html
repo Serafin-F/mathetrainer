@@ -72,7 +72,7 @@ function gConv(l){if(Math.random()>0.5){
   return{type:"fraction",showWhole:true,
     question:<span>Gib <Fc n={n} d={d} sz="large"/> als gemischte Zahl an!</span>,
     answer:{whole:""+w,num:""+sn,den:""+sd},
-    check:i=>{const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iw===w&&iden>0&&Math.abs(inum/iden-sn/sd)<0.0001},
+    check:i=>{const iw=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;if(iden<=0||inum>=iden)return false;return iw===w&&Math.abs(inum/iden-sn/sd)<0.0001},
     hints:[
       `Teile ${n} durch ${d}: Wie oft passt ${d} ganz in ${n}?`,
       `${n} ÷ ${d} = ${w} Rest ${rem} → also ${w} und ${rem}/${d}`,
@@ -180,7 +180,7 @@ function gSimp(l){
     question:<span>Kürze <Fc n={n} d={d} sz="large"/> so weit wie möglich!</span>,
     answer:answerObj,
     check:i=>{
-      if(res.isMixed){const iw2=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;return iden>0&&Math.abs((iw2+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),Math.abs(iden))===1}
+      if(res.isMixed){const iw2=parseInt(i.whole)||0,inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;if(iden<=0||inum>=iden)return false;return Math.abs((iw2+inum/iden)-res.value)<0.0001&&gcd(Math.abs(inum),Math.abs(iden))===1}
       const inum=parseInt(i.num)||0,iden=parseInt(i.den)||1;
       if(iden<=0)return false;
       if(res.isWhole)return Math.abs(inum/iden-res.whole)<0.0001||(inum===res.whole&&iden===1);
