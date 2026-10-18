@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ggT mit zwei Seilen</title>
+<style>
+:root{
+  --bg:#ffffff;--fg:#1f2328;--muted:#5b6470;--card:#f3f4f6;--border:#c9ced6;
+  --a:#378ADD;--b:#1D9E75;--c:#D85A30;--ok:#1D9E75;
+  --achip:#E6F1FB;--achipfg:#0C447C;
+  --bchip:#E1F5EE;--bchipfg:#085041;
+  --cchip:#FAECE7;--cchipfg:#712B13;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#1b1d21;--fg:#eceef1;--muted:#a0a7b2;--card:#262a30;--border:#454b55;
+    --achip:#0C447C;--achipfg:#B5D4F4;
+    --bchip:#085041;--bchipfg:#9FE1CB;
+    --cchip:#712B13;--cchipfg:#F5C4B3;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:720px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:24px;margin:8px 0 6px}
+h2{font-size:18px;margin:28px 0 8px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.controls{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:16px 0 12px}
+.controls label{font-size:15px;color:var(--muted)}
+.controls output{font-size:15px;font-weight:600;min-width:84px}
+input[type=range]{width:100%}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 4px}
+button{font:inherit;font-size:15px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--fg);cursor:pointer}
+button:hover{border-color:var(--muted)}
+svg{display:block;width:100%;height:auto}
+.card{background:var(--card);border-radius:10px;padding:14px 16px;margin-top:8px}
+.card .row{font-size:15px;margin:0 0 4px}
+.card .big{font-size:16px;font-weight:600;margin-top:8px}
+.good{color:var(--ok)}
+.bad{color:var(--c)}
+.set{margin:8px 0 14px;font-size:15px}
+.set .lbl{font-weight:600;margin-right:4px}
+.chip{display:inline-block;padding:1px 9px;border-radius:999px;font-size:14px;margin:2px 1px;font-variant-numeric:tabular-nums;border:2px solid transparent}
+.chip.a{background:var(--achip);color:var(--achipfg)}
+.chip.b{background:var(--bchip);color:var(--bchipfg)}
+.chip.c{background:var(--cchip);color:var(--cchipfg);font-weight:600}
+.chip.k{background:var(--c);color:#fff;font-weight:700}
+.chip.sel{border-color:var(--fg)}
+.step{display:flex;gap:10px;margin:0 0 4px}
+.step .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;margin-top:1px}
+.merke{border-left:4px solid var(--c);background:var(--card);border-radius:0 10px 10px 0;padding:12px 16px;margin-top:16px}
+sub{font-size:.75em}
+</style>
+</head>
+<body>
+<main>
+  <h1>Der ggT – zwei Seile in gleich lange Stücke schneiden</h1>
+  <p class="muted">Du hast zwei Seile. Beide sollen in lauter <b>gleich lange Stücke</b> geschnitten werden, und es darf <b>kein Rest</b> übrig bleiben. Wie lang dürfen die Stücke sein? Und wie lang sind sie <b>höchstens</b>? Stell die Seillängen ein und probiere Stücklängen aus.</p>
+
+  <div class="controls">
+    <label for="a">Seil A</label>
+    <input type="range" id="a" min="2" max="30" step="1" value="12">
+    <output id="aout">12 m</output>
+    <label for="b">Seil B</label>
+    <input type="range" id="b" min="2" max="30" step="1" value="18">
+    <output id="bout">18 m</output>
+    <label for="s">Stück</label>
+    <input type="range" id="s" min="1" max="12" step="1" value="4">
+    <output id="sout">4 m</output>
+  </div>
+  <div class="btns">
+    <button id="show">✂ Größtes Stück zeigen</button>
+    <button id="reset">↺ Stück = 1 m</button>
+  </div>
+
+  <svg id="svg" viewBox="0 0 380 170" role="img" aria-label="Zwei Seile, in gleich lange Stücke geschnitten. Übrig bleibende Reste sind schraffiert.">
+    <title>Zwei Seile in gleich lange Stücke geschnitten</title>
+    <defs>
+      <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="6" height="6" fill="none"/>
+        <line x1="0" y1="0" x2="0" y2="6" stroke="#D85A30" stroke-width="3"/>
+      </pattern>
+    </defs>
+    <g id="ropes"></g>
+  </svg>
+
+  <div class="card">
+    <div class="row" id="ra"></div>
+    <div class="row" id="rb"></div>
+    <div class="big" id="msg"></div>
+  </div>
+
+  <h2>So findest du es ohne Ausprobieren heraus</h2>
+  <p>Ein Stück passt ohne Rest, wenn seine Länge die Seillänge <b>teilt</b>. Du suchst also die <b>Teiler</b> der beiden Seillängen. Das Stück, das du oben gerade eingestellt hast, ist in den Mengen umrandet.</p>
+
+  <div id="sets">
+    <div class="step"><div class="n">1</div><div>Diese Stücklängen gehen bei Seil A ohne Rest auf:</div></div>
+    <div class="set" id="seta"></div>
+    <div class="step"><div class="n">2</div><div>Diese gehen bei Seil B ohne Rest auf:</div></div>
+    <div class="set" id="setb"></div>
+    <div class="step"><div class="n">3</div><div>Welche Zahlen stehen in <b>beiden</b> Mengen? Das sind die <b>gemeinsamen Teiler</b> (orange). Diese Stücklängen passen bei beiden Seilen.</div></div>
+    <div class="set" id="gem"></div>
+    <div class="step"><div class="n">4</div><div>Die <b>größte</b> davon ist der <b>ggT</b> – der <b>g</b>rößte <b>g</b>emeinsame <b>T</b>eiler.</div></div>
+  </div>
+
+  <div class="merke" id="merke"></div>
+</main>
+
+<script>
+function $(id){return document.getElementById(id)}
+function gcd(x,y){return y?gcd(y,x%y):x}
+function divisors(n){var d=[];for(var i=1;i<=n;i++){if(n%i===0)d.push(i)}return d}
+var NS='http://www.w3.org/2000/svg';
+function el(n,at,txt){var e=document.createElementNS(NS,n);for(var k in at)e.setAttribute(k,at[k]);if(txt!==undefined)e.textContent=txt;return e}
+var chipsA=[],chipsB=[],chipsG=[];
+
+function vals(){return [+$('a').value,+$('b').value,+$('s').value]}
+
+function buildSets(){
+  var v=vals(),a=v[0],b=v[1],g=gcd(a,b);
+  var da=divisors(a),db=divisors(b);
+  function build(id,n,list,other,cls,store){
+    var box=$(id);box.innerHTML='';
+    var l=document.createElement('span');l.className='lbl';l.innerHTML='T<sub>'+n+'</sub> = {';box.appendChild(l);
+    list.forEach(function(d,i){
+      var c=document.createElement('span');
+      var common=(other%d===0);
+      c.className='chip '+cls+(common?' c':'')+(d===g?' k':'');
+      c.textContent=d;box.appendChild(c);store.push({el:c,v:d});
+      if(i<list.length-1){box.appendChild(document.createTextNode(' '))}
+    });
+    var e=document.createElement('span');e.textContent=' }';box.appendChild(e);
+  }
+  chipsA=[];chipsB=[];chipsG=[];
+  build('seta',a,da,b,'a',chipsA);
+  build('setb',b,db,a,'b',chipsB);
+  var gl=divisors(g);
+  var gbox=$('gem');gbox.innerHTML='';
+  var gl0=document.createElement('span');gl0.className='lbl';gl0.textContent='Gemeinsame Teiler:';gbox.appendChild(gl0);
+  gl.forEach(function(d){
+    var c=document.createElement('span');
+    c.className='chip c'+(d===g?' k':'');
+    c.textContent=d;gbox.appendChild(c);chipsG.push({el:c,v:d});
+  });
+  var note=document.createElement('div');note.className='muted';
+  note.innerHTML='Der größte davon ist der ggT: <b style="color:var(--c)">'+g+'</b>';
+  gbox.appendChild(note);
+  var pa=a/g,pb=b/g;
+  $('merke').innerHTML='<b>ggT('+a+', '+b+') = '+g+'</b><br>Die größten gleich langen Stücke ohne Rest sind '+g+' m lang. Seil A ergibt dann '+pa+' Stück'+(pa===1?'':'e')+', Seil B '+pb+' Stück'+(pb===1?'':'e')+'.<br><span class="muted">Alle anderen Stücklängen, die passen, sind Teiler des ggT.'+(g===1?' Hier passt nur 1 m – die beiden Längen sind <b>teilerfremd</b>.':'')+'</span>';
+}
+
+function drawRope(y,len,s,color,name,sc){
+  var g=$('ropes');
+  var x0=20;
+  g.appendChild(el('text',{x:x0,y:y-8,'font-size':13,fill:'var(--muted)'},name+' · '+len+' m'));
+  var n=Math.floor(len/s),r=len%s,gap=3;
+  for(var k=0;k<n;k++){
+    var x=x0+k*s*sc,w=s*sc;
+    g.appendChild(el('rect',{x:x+gap/2,y:y,width:Math.max(w-gap,1),height:28,rx:5,fill:color}));
+    if(w>=22){g.appendChild(el('text',{x:x+w/2,y:y+19,'text-anchor':'middle','font-size':12,'font-weight':600,fill:'#fff'},s))}
+  }
+  if(r>0){
+    var xr=x0+n*s*sc,wr=r*sc;
+    g.appendChild(el('rect',{x:xr+gap/2,y:y,width:Math.max(wr-gap,1),height:28,rx:5,fill:'url(#hatch)',stroke:'#D85A30','stroke-width':1.5}));
+    if(wr>=22){g.appendChild(el('text',{x:xr+wr/2,y:y+19,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#712B13'},r))}
+  }
+  for(var u=0;u<=len;u++){
+    var xu=x0+u*sc;
+    g.appendChild(el('line',{x1:xu,x2:xu,y1:y+33,y2:y+(u%5===0?40:37),stroke:'var(--muted)','stroke-width':0.8}));
+  }
+}
+
+function renderRopes(){
+  var v=vals(),a=v[0],b=v[1],s=v[2];
+  var sc=340/Math.max(a,b);
+  var g=$('ropes');while(g.firstChild)g.removeChild(g.firstChild);
+  drawRope(30,a,s,'#378ADD','Seil A',sc);
+  drawRope(100,b,s,'#1D9E75','Seil B',sc);
+}
+
+function render(){
+  var v=vals(),a=v[0],b=v[1],s=v[2];
+  var m=Math.min(a,b);
+  $('s').max=m;
+  if(s>m){s=m;$('s').value=m}
+  $('aout').textContent=a+' m';$('bout').textContent=b+' m';$('sout').textContent=s+' m';
+  renderRopes();
+  var na=Math.floor(a/s),ra=a%s,nb=Math.floor(b/s),rb=b%s;
+  function line(n,len,k,r,col){
+    return '<b style="color:'+col+'">Seil '+n+'</b> ('+len+' m): '+k+' Stück'+(k===1?'':'e')+' à '+s+' m'+(r>0?', <span class="bad"><b>Rest '+r+' m</b></span>':', <span class="good">kein Rest</span>');
+  }
+  $('ra').innerHTML=line('A',a,na,ra,'#378ADD');
+  $('rb').innerHTML=line('B',b,nb,rb,'#1D9E75');
+  var g=gcd(a,b),msg=$('msg');
+  if(ra===0&&rb===0){
+    if(s===g){msg.className='big good';msg.textContent='Passt – und das ist das größte mögliche Stück: ggT('+a+', '+b+') = '+g}
+    else{msg.className='big good';msg.textContent='Passt bei beiden ohne Rest! Aber geht es noch größer?'}
+  }else{
+    msg.className='big bad';
+    msg.textContent=(ra>0&&rb>0)?'Bei beiden Seilen bleibt ein Rest – das geht nicht.':(ra>0?'Bei Seil A bleibt ein Rest – das geht nicht.':'Bei Seil B bleibt ein Rest – das geht nicht.');
+  }
+  [chipsA,chipsB,chipsG].forEach(function(arr){arr.forEach(function(c){c.el.classList.toggle('sel',c.v===s)})});
+}
+
+function onRope(){buildSets();render()}
+$('a').oninput=onRope;
+$('b').oninput=onRope;
+$('s').oninput=render;
+$('show').onclick=function(){var v=vals();$('s').value=gcd(v[0],v[1]);render()};
+$('reset').onclick=function(){$('s').value=1;render()};
+buildSets();render();
+</script>
+</body>
+</html>
