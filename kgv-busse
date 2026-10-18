@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kgV mit zwei Bussen</title>
+<style>
+:root{
+  --bg:#ffffff;--fg:#1f2328;--muted:#5b6470;--card:#f3f4f6;--border:#c9ced6;
+  --a:#378ADD;--b:#1D9E75;--c:#D85A30;
+  --achip:#E6F1FB;--achipfg:#0C447C;
+  --bchip:#E1F5EE;--bchipfg:#085041;
+  --cchip:#FAECE7;--cchipfg:#712B13;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#1b1d21;--fg:#eceef1;--muted:#a0a7b2;--card:#262a30;--border:#454b55;
+    --achip:#0C447C;--achipfg:#B5D4F4;
+    --bchip:#085041;--bchipfg:#9FE1CB;
+    --cchip:#712B13;--cchipfg:#F5C4B3;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:720px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:24px;margin:8px 0 6px}
+h2{font-size:18px;margin:28px 0 8px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.controls{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:16px 0 12px}
+.controls label{font-size:15px;color:var(--muted)}
+.controls output{font-size:15px;font-weight:600;min-width:84px}
+input[type=range]{width:100%}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 4px}
+button{font:inherit;font-size:15px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--fg);cursor:pointer}
+button:hover{border-color:var(--muted)}
+svg{display:block;width:100%;height:auto}
+.card{background:var(--card);border-radius:10px;padding:14px 16px;margin-top:8px}
+.card .small{font-size:13px;color:var(--muted)}
+.card .big{font-size:16px;font-weight:600;margin-top:2px}
+.set{margin:8px 0 14px;font-size:15px}
+.set .lbl{font-weight:600;margin-right:4px}
+.chip{display:inline-block;padding:1px 9px;border-radius:999px;font-size:14px;margin:2px 1px;font-variant-numeric:tabular-nums}
+.chip.a{background:var(--achip);color:var(--achipfg)}
+.chip.b{background:var(--bchip);color:var(--bchipfg)}
+.chip.c{background:var(--cchip);color:var(--cchipfg);font-weight:600}
+.chip.k{background:var(--c);color:#fff;font-weight:700}
+.started .chip{opacity:.4}
+.started .chip.done{opacity:1}
+.step{display:flex;gap:10px;margin:0 0 4px}
+.step .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;margin-top:1px}
+.merke{border-left:4px solid var(--c);background:var(--card);border-radius:0 10px 10px 0;padding:12px 16px;margin-top:16px}
+sub{font-size:.75em}
+</style>
+</head>
+<body>
+<main>
+  <h1>Das kgV – zwei Busse, eine Haltestelle</h1>
+  <p class="muted">Zwei Busse starten gleichzeitig an der Haltestelle in der Mitte. Bus A fährt links eine Runde, Bus B rechts. Wann sind beide <b>wieder gleichzeitig</b> an der Haltestelle? Stell die Rundenzeiten ein, schätze zuerst und drück dann auf „Busse starten“.</p>
+
+  <div class="controls">
+    <label for="a">Bus A</label>
+    <input type="range" id="a" min="2" max="12" step="1" value="6">
+    <output id="aout">Runde: 6 min</output>
+    <label for="b">Bus B</label>
+    <input type="range" id="b" min="2" max="12" step="1" value="8">
+    <output id="bout">Runde: 8 min</output>
+  </div>
+  <div class="btns">
+    <button id="play">▶ Busse starten</button>
+    <button id="reset">↺ Zurück zum Start</button>
+  </div>
+
+  <svg id="svg" viewBox="0 0 380 240" role="img" aria-label="Haltestelle in der Mitte, links die Schleife von Bus A, rechts die Schleife von Bus B">
+    <title>Zwei Schleifen mit gemeinsamer Haltestelle</title>
+    <circle cx="103" cy="140" r="75" fill="none" stroke="var(--border)" stroke-width="14" opacity="0.6"/>
+    <circle cx="277" cy="140" r="75" fill="none" stroke="var(--border)" stroke-width="14" opacity="0.6"/>
+    <line x1="178" y1="140" x2="202" y2="140" stroke="var(--border)" stroke-width="14" opacity="0.6"/>
+    <circle id="pa" cx="103" cy="140" r="75" fill="none" stroke="#378ADD" stroke-width="4" transform="translate(0,280) scale(1,-1)"/>
+    <circle id="pb" cx="277" cy="140" r="75" fill="none" stroke="#1D9E75" stroke-width="4" transform="rotate(180 277 140)"/>
+    <line x1="190" y1="26" x2="190" y2="120" stroke="var(--muted)" stroke-width="0.7" stroke-dasharray="3 3"/>
+    <text x="190" y="18" text-anchor="middle" font-size="12" fill="var(--muted)">Haltestelle</text>
+    <rect id="stn" x="172" y="124" width="36" height="32" rx="6" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+    <text x="103" y="136" text-anchor="middle" font-size="12" fill="var(--muted)">Bus A</text>
+    <text id="la" x="103" y="162" text-anchor="middle" font-size="26" font-weight="600" fill="#378ADD">0</text>
+    <text x="103" y="178" text-anchor="middle" font-size="11" fill="var(--muted)">Runden</text>
+    <text x="277" y="136" text-anchor="middle" font-size="12" fill="var(--muted)">Bus B</text>
+    <text id="lb" x="277" y="162" text-anchor="middle" font-size="26" font-weight="600" fill="#1D9E75">0</text>
+    <text x="277" y="178" text-anchor="middle" font-size="11" fill="var(--muted)">Runden</text>
+    <g id="ba"><circle r="10" fill="#378ADD"/><text y="4" text-anchor="middle" font-size="12" font-weight="600" fill="#E6F1FB">A</text></g>
+    <g id="bb"><circle r="10" fill="#1D9E75"/><text y="4" text-anchor="middle" font-size="12" font-weight="600" fill="#E1F5EE">B</text></g>
+  </svg>
+
+  <div class="card">
+    <div class="small">Minute <b id="mt" style="color:var(--fg)">0</b></div>
+    <div class="big" id="msg">Beide stehen an der Haltestelle.</div>
+  </div>
+
+  <h2>So findest du es ohne Animation heraus</h2>
+  <p>Du schreibst auf, wann jeder Bus an der Haltestelle ist. Das sind genau die <b>Vielfachen</b> seiner Rundenzeit. Beim Abspielen leuchten die Zahlen auf, sobald der Bus da ist.</p>
+
+  <div id="sets">
+    <div class="step"><div class="n">1</div><div>Bus A ist an der Haltestelle nach …</div></div>
+    <div class="set" id="seta"></div>
+    <div class="step"><div class="n">2</div><div>Bus B ist an der Haltestelle nach …</div></div>
+    <div class="set" id="setb"></div>
+    <div class="step"><div class="n">3</div><div>Welche Zahlen stehen in <b>beiden</b> Mengen? Das sind die <b>gemeinsamen Vielfachen</b> (orange).</div></div>
+    <div class="set" id="gem"></div>
+    <div class="step"><div class="n">4</div><div>Die <b>kleinste</b> davon ist das <b>kgV</b> – das <b>k</b>leinste <b>g</b>emeinsame <b>V</b>ielfache.</div></div>
+  </div>
+
+  <div class="merke" id="merke"></div>
+</main>
+
+<script>
+var t=0,run=false,fin=false,last=0,SPEED=3,R=75;
+var chipsA=[],chipsB=[];
+function $(id){return document.getElementById(id)}
+function gcd(x,y){return y?gcd(y,x%y):x}
+function vals(){return [+$('a').value,+$('b').value]}
+function lcm(){var v=vals();return v[0]*v[1]/gcd(v[0],v[1])}
+function tr(id,x,y){$(id).setAttribute('transform','translate('+x+','+y+')')}
+function prog(id,f){var c=2*Math.PI*R;$(id).setAttribute('stroke-dasharray',(f*c)+' '+c)}
+
+function buildSets(){
+  var v=vals(),a=v[0],b=v[1],L=lcm();
+  var limit=(2*L<=72)?2*L:L;
+  function build(id,n,other,cls,store){
+    var box=$(id);box.innerHTML='';
+    var l=document.createElement('span');l.className='lbl';l.innerHTML='V<sub>'+n+'</sub> = {';box.appendChild(l);
+    for(var m=n;m<=limit;m+=n){
+      var c=document.createElement('span');
+      var common=(m%other===0);
+      c.className='chip '+cls+(common?' c':'')+(m===L?' k':'');
+      c.textContent=m;box.appendChild(c);store.push({el:c,v:m});
+    }
+    var e=document.createElement('span');e.textContent=' … }';box.appendChild(e);
+  }
+  chipsA=[];chipsB=[];
+  build('seta',a,b,'a',chipsA);
+  build('setb',b,a,'b',chipsB);
+  $('gem').innerHTML='<span class="lbl">Gemeinsame Vielfache:</span> <span class="chip c k">'+L+'</span><span class="chip c">'+(2*L)+'</span><span class="chip c">'+(3*L)+'</span> … <br><span class="muted">Das kleinste davon ist das kgV: <b style="color:var(--c)">'+L+'</b></span>';
+  $('merke').innerHTML='<b>kgV('+a+', '+b+') = '+L+'</b><br>Nach '+L+' Minuten sind beide Busse zum ersten Mal wieder gleichzeitig an der Haltestelle. Bus A ist dann '+(L/a)+' Runden gefahren, Bus B '+(L/b)+' Runden.<br><span class="muted">Danach treffen sie sich bei '+(2*L)+', '+(3*L)+' … Minuten – alle gemeinsamen Vielfachen sind Vielfache des kgV.</span>';
+}
+
+function btn(){$('play').textContent=run?'⏸ Anhalten':(fin?'▶ Nochmal':'▶ Busse starten')}
+
+function render(){
+  var v=vals(),a=v[0],b=v[1],L=lcm();
+  $('aout').textContent='Runde: '+a+' min';
+  $('bout').textContent='Runde: '+b+' min';
+  var fa=(t/a)%1,fb=(t/b)%1;
+  var ta=-2*Math.PI*fa,tb=Math.PI+2*Math.PI*fb;
+  tr('ba',103+R*Math.cos(ta),140+R*Math.sin(ta));
+  tr('bb',277+R*Math.cos(tb),140+R*Math.sin(tb));
+  prog('pa',fa);prog('pb',fb);
+  $('mt').textContent=Math.floor(t);
+  $('la').textContent=Math.floor(t/a);
+  $('lb').textContent=Math.floor(t/b);
+  var stn=$('stn');
+  if(fin){
+    stn.setAttribute('stroke','#D85A30');stn.setAttribute('stroke-width','3');
+    $('msg').textContent='Gemeinsam am Start nach '+L+' min: kgV('+a+', '+b+') = '+L;
+  }else{
+    stn.setAttribute('stroke','var(--muted)');stn.setAttribute('stroke-width','1.5');
+    $('msg').textContent=t===0?'Beide stehen an der Haltestelle.':'Unterwegs …';
+  }
+  $('sets').className=(t>0)?'started':'';
+  chipsA.forEach(function(c){c.el.classList.toggle('done',t>=c.v-1e-9)});
+  chipsB.forEach(function(c){c.el.classList.toggle('done',t>=c.v-1e-9)});
+  btn();
+}
+
+function frame(ts){
+  if(!run)return;
+  var dt=Math.min((ts-last)/1000,0.1);last=ts;t+=dt*SPEED;
+  var L=lcm();
+  if(t>=L){t=L;run=false;fin=true}
+  render();
+  if(run)requestAnimationFrame(frame);
+}
+$('play').onclick=function(){
+  if(fin){t=0;fin=false}
+  run=!run;
+  if(run){last=performance.now();requestAnimationFrame(frame)}
+  render();
+};
+function reset(){run=false;fin=false;t=0;buildSets();render()}
+$('reset').onclick=reset;
+$('a').oninput=reset;
+$('b').oninput=reset;
+buildSets();render();
+</script>
+</body>
+</html>
