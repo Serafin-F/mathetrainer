@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mathe-Übung: Teilbarkeit, ganze Zahlen &amp; Koordinatensystem</title>
+<style>
+:root{--pri:#2a5db0;--pri-l:#e8effb;--ok:#1f8a4c;--ok-l:#e6f5ec;--bad:#c0392b;--bad-l:#fbebe9;--tx:#1f2733;--mu:#667085;--bd:#d6dbe5;--bg:#f4f6fb;--warn-l:#fff6df;--warn:#8a6100}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--tx);line-height:1.5;font-size:17px}
+#app{max-width:780px;margin:0 auto;padding:16px 14px 60px}
+h1{font-size:1.6rem;margin:.2em 0 .1em;line-height:1.2}
+h2{font-size:1.3rem;margin:.2em 0 .5em}
+h3{font-size:1.05rem;margin:1em 0 .3em}
+.sub{color:var(--mu);margin:0 0 14px}
+.card{background:#fff;border:1.5px solid var(--bd);border-radius:14px;padding:14px 16px;margin:0 0 12px}
+.steps{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px}
+.steps div{flex:1 1 200px;background:var(--pri-l);border-radius:12px;padding:10px 12px;font-size:.95rem}
+.steps b{display:block;color:var(--pri)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.tcard{cursor:pointer;text-align:left;font:inherit;color:inherit;display:block;width:100%;transition:transform .08s,border-color .08s}
+.tcard.bonus{border-color:#e0a100;border-style:dashed;background:var(--warn-l)}
+.tcard:hover{border-color:var(--pri);transform:translateY(-1px)}
+.tcard .ic{font-size:1.8rem;line-height:1}
+.tcard .tt{font-weight:700;font-size:1.05rem;margin:.3em 0 .1em}
+.tcard .ts{color:var(--mu);font-size:.9rem;margin-bottom:8px}
+.dots{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.dot{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--mu);background:#fff}
+.dot.ok{background:var(--ok-l);border-color:var(--ok);color:var(--ok)}
+.dot.fail{background:var(--bad-l);border-color:var(--bad);color:var(--bad)}
+.dot.star{border-style:dashed}
+.sep{width:8px}
+.btn{font:inherit;font-weight:600;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;background:var(--pri);color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn.sec{background:#fff;color:var(--pri);border:1.5px solid var(--pri)}
+.btn.small{padding:6px 12px;font-size:.9rem}
+.back{background:none;border:none;color:var(--pri);font:inherit;font-weight:600;cursor:pointer;padding:4px 0;margin-bottom:6px}
+.tabs{display:flex;gap:6px;margin:10px 0 14px;flex-wrap:wrap}
+.tab{font:inherit;font-weight:600;padding:9px 14px;border-radius:10px;border:1.5px solid var(--bd);background:#fff;cursor:pointer;color:var(--tx)}
+.tab.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.box{border-left:5px solid var(--pri);background:var(--pri-l);border-radius:8px;padding:10px 14px;margin:10px 0}
+.box.gold{border-color:#e0a100;background:var(--warn-l)}
+.box.ex{border-color:var(--ok);background:var(--ok-l)}
+table.t{border-collapse:collapse;width:100%;font-size:.95rem;margin:6px 0}
+table.t th,table.t td{border:1px solid var(--bd);padding:6px 9px;text-align:left}
+table.t th{background:var(--pri-l)}
+.ladder{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:10px 0;font-weight:700}
+.ladder .u{background:var(--pri);color:#fff;border-radius:8px;padding:6px 12px}
+.ladder .a{font-size:.8rem;color:var(--mu);font-weight:600;text-align:center;padding:0 2px}
+.task{display:flex;gap:12px}
+.task.ok{border-color:var(--ok)}
+.task.fail{border-color:var(--bad)}
+.tnum{flex:0 0 34px;height:34px;border-radius:50%;background:var(--pri);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.task.ok .tnum{background:var(--ok)}
+.task.fail .tnum{background:var(--bad)}
+.tbody{flex:1;min-width:0}
+.q{margin-bottom:8px}
+.part{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0;padding:4px 6px;border-radius:8px}
+.part.inl{display:inline-flex;margin:4px 0;gap:6px}.part.inl .inp{width:64px}.part.ok{background:var(--ok-l)}
+.part.bad{background:var(--bad-l)}
+.pl{font-weight:500}
+.inp{font:inherit;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;width:110px;background:#fff}
+.inp.set,.inp.seq{width:min(100%,260px)}
+.inp:focus,select:focus{outline:2px solid var(--pri);border-color:var(--pri)}
+select{font:inherit;padding:8px 8px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;max-width:100%}
+.unit{color:var(--mu)}
+.mc{display:flex;flex-direction:column;gap:6px;width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--bd);border-radius:10px;padding:8px 10px;cursor:pointer;background:#fff}
+.opt:has(input:checked){border-color:var(--pri);background:var(--pri-l)}
+.opt input{margin-top:5px}
+.mk{font-weight:800;font-size:1.1rem}
+.mk.ok{color:var(--ok)}.mk.bad{color:var(--bad)}
+.fb{margin-top:10px;padding:9px 12px;border-radius:10px;font-size:.97rem}
+.fb.hint{background:var(--warn-l);color:#5b4200;border:1.5px solid #e0a100}
+.fb.good{background:var(--ok-l);color:#14562f;border:1.5px solid var(--ok)}
+.fb.sol{background:var(--bad-l);color:#7c241a;border:1.5px solid var(--bad)}
+.fb.msg{background:#eef0f4;color:var(--mu)}
+.fig{margin:6px 0 4px}
+svg.grid{width:100%;max-width:340px;display:block;touch-action:manipulation;background:#fff;border:1px solid var(--bd);border-radius:8px}
+svg.grid[data-click]{cursor:crosshair}
+svg.nl{width:100%;max-width:560px;display:block;background:#fff;border:1px solid var(--bd);border-radius:8px}
+.gl{stroke:#e3e7ef;stroke-width:1}
+.ax{stroke:#333;stroke-width:1.6}
+.tk{font-size:10px;fill:#555}
+.pt{fill:#2a5db0}
+.ptl{font-size:13px;font-weight:700;fill:#1f2733}
+.bar{height:12px;border-radius:6px;background:#e5e8ef;overflow:hidden;min-width:90px}
+.bar i{display:block;height:100%;background:var(--ok)}
+.bar.mid i{background:#e0a100}.bar.low i{background:var(--bad)}
+.srow{display:grid;grid-template-columns:1.5fr 1fr 1.2fr;gap:8px 12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)}
+.srow:last-child{border-bottom:none}
+.stat{font-weight:700}
+.stat.ok{color:var(--ok)}.stat.mid{color:var(--warn)}.stat.low{color:var(--bad)}.stat.na{color:var(--mu);font-weight:500}
+textarea{width:100%;font:inherit;font-size:.9rem;border:1.5px solid var(--bd);border-radius:8px;padding:8px;min-height:130px;background:#fafbfd}
+.nameinp{font:inherit;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;width:100%;max-width:320px}
+.heft{background:#fff;border:2px dashed var(--pri);border-radius:12px;padding:10px 14px;margin:8px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+@media(max-width:520px){.srow{grid-template-columns:1fr}.task{gap:8px}.tnum{flex-basis:30px;height:30px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------- Hilfsfunktionen ---------- */
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmt(n){return String(n).replace('.',',').replace('-','−')}
+function normMinus(s){return String(s).replace(/[−–—‐‑]/g,'-').replace(/-\s+(?=\d)/g,'-')}
+function afterEq(s){var i=s.lastIndexOf('=');return i>-1?s.slice(i+1):s}
+/* eine Dezimalzahl: Komma und Punkt erlaubt, Einheit/Leerzeichen egal */
+function nums(s){
+  s=afterEq(normMinus(s));
+  return (s.match(/[+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+)/g)||[]).map(function(x){return parseFloat(x.replace(',','.'))});
+}
+/* Listen (Mengen/Reihenfolgen): Komma ist hier IMMER Trennzeichen, Leerzeichen egal */
+function intList(s){
+  s=afterEq(normMinus(s));
+  var i=s.indexOf('{');if(i>-1){s=s.slice(i+1);var j=s.indexOf('}');if(j>-1)s=s.slice(0,j)}
+  return (s.match(/[+-]?\d+/g)||[]).map(Number);
+}
+/* Tausenderpunkt/-leerzeichen (2.300 oder 2 300) – nur wenn die Lösung eine ganze Zahl >= 1000 ist */
+function thousands(s){
+  s=afterEq(normMinus(s)).trim().replace(/\s*[A-Za-z°%].*$/,'');
+  return /^[+-]?\d{1,3}([ .\u00a0\u2009']\d{3})+$/.test(s)?parseFloat(s.replace(/[ .\u00a0\u2009']/g,'')):null;
+}
+function strip(h){return String(h).replace(/<[^>]*>/g,'')}
+
+/* ---------- Grafiken ---------- */
+function gridSVG(o){
+  o=o||{};var U=30,C=180,s='<svg class="grid" viewBox="0 0 360 360"'+(o.click?' data-click="'+o.click+'"':'')+' role="img" aria-label="Koordinatensystem">';
+  for(var i=-5;i<=5;i++){
+    s+='<line x1="'+(C+i*U)+'" y1="'+(C-150)+'" x2="'+(C+i*U)+'" y2="'+(C+150)+'" class="gl"/>';
+    s+='<line x1="'+(C-150)+'" y1="'+(C+i*U)+'" x2="'+(C+150)+'" y2="'+(C+i*U)+'" class="gl"/>';
+  }
+  if(o.quad){
+    var q=[['I',C+75,C-60],['II',C-75,C-60],['III',C-75,C+95],['IV',C+75,C+95]];
+    q.forEach(function(a){s+='<text x="'+a[1]+'" y="'+a[2]+'" text-anchor="middle" font-size="30" font-weight="700" fill="#c9d3e6">'+a[0]+'</text>'});
+  }
+  s+='<line x1="20" y1="180" x2="342" y2="180" class="ax"/><line x1="180" y1="340" x2="180" y2="18" class="ax"/>';
+  s+='<polygon points="346,180 336,175 336,185" fill="#333"/><polygon points="180,14 175,24 185,24" fill="#333"/>';
+  s+='<text x="344" y="198" font-size="13" font-style="italic">x</text><text x="190" y="20" font-size="13" font-style="italic">y</text>';
+  for(var k=-5;k<=5;k++){
+    if(k===0)continue;
+    s+='<line x1="'+(C+k*U)+'" y1="175" x2="'+(C+k*U)+'" y2="185" class="ax" style="stroke-width:1.2"/>';
+    s+='<line x1="175" y1="'+(C-k*U)+'" x2="185" y2="'+(C-k*U)+'" class="ax" style="stroke-width:1.2"/>';
+    s+='<text x="'+(C+k*U)+'" y="'+(C+20)+'" text-anchor="middle" class="tk">'+fmt(k)+'</text>';
+    s+='<text x="'+(C-9)+'" y="'+(C-k*U+4)+'" text-anchor="end" class="tk">'+fmt(k)+'</text>';
+  }
+  s+='<text x="'+(C-9)+'" y="'+(C+16)+'" text-anchor="end" class="tk">0</text>';
+  (o.pts||[]).forEach(function(p){
+    s+='<circle cx="'+(C+p.x*U)+'" cy="'+(C-p.y*U)+'" r="4.5" class="pt"/><text x="'+(C+p.x*U+7)+'" y="'+(C-p.y*U-7)+'" class="ptl">'+p.n+'</text>';
+  });
+  s+='<g class="mk">'+(o.mark?markSVG(o.mark[0],o.mark[1],o.markCls,o.name):'')+'</g>';
+  if(o.ans){s+=markSVG(o.ans[0],o.ans[1],'sol',o.name)}
+  if(o.click){s+='<rect x="0" y="0" width="360" height="360" fill="transparent"/>'}
+  return s+'</svg>';
+}
+function markSVG(x,y,cls,name){
+  var col=cls==='ok'?'#1f8a4c':cls==='bad'?'#c0392b':cls==='sol'?'#1f8a4c':'#d9480f';
+  var cx=180+x*30,cy=180-y*30;
+  return '<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="none" stroke="'+col+'" stroke-width="2.5"/><line x1="'+(cx-5)+'" y1="'+(cy-5)+'" x2="'+(cx+5)+'" y2="'+(cy+5)+'" stroke="'+col+'" stroke-width="2.5"/><line x1="'+(cx-5)+'" y1="'+(cy+5)+'" x2="'+(cx+5)+'" y2="'+(cy-5)+'" stroke="'+col+'" stroke-width="2.5"/>'+(name?'<text x="'+(cx+9)+'" y="'+(cy-9)+'" font-size="13" font-weight="700" fill="'+col+'">'+name+'</text>':'');
+}
+function numlineSVG(pts,mn,mx){
+  mn=mn===undefined?-10:mn;mx=mx===undefined?10:mx;
+  var W=520,x0=30,st=(W-60)/(mx-mn),y=55;
+  var s='<svg class="nl" viewBox="0 0 520 100" role="img" aria-label="Zahlengerade">';
+  s+='<line x1="12" y1="'+y+'" x2="506" y2="'+y+'" class="ax"/><polygon points="512,'+y+' 502,'+(y-5)+' 502,'+(y+5)+'" fill="#333"/>';
+  for(var n=mn;n<=mx;n++){
+    var x=x0+(n-mn)*st;
+    s+='<line x1="'+x+'" y1="'+(y-6)+'" x2="'+x+'" y2="'+(y+6)+'" class="ax" style="stroke-width:1.3"/>';
+    s+='<text x="'+x+'" y="'+(y+22)+'" text-anchor="middle" class="tk" style="font-size:10.5px">'+fmt(n)+'</text>';
+  }
+  pts.forEach(function(p){
+    var x=x0+(p.x-mn)*st;
+    s+='<circle cx="'+x+'" cy="'+y+'" r="5.5" fill="#d9480f"/><text x="'+x+'" y="'+(y-14)+'" text-anchor="middle" class="ptl" style="font-size:15px">'+p.n+'</text>';
+  });
+  return s+'</svg>';
+}
+
+/* ---------- Aufgaben-Bausteine ---------- */
+var N=function(label,ans,unit){return {t:'num',label:label,ans:ans,unit:unit}};
+var SEL=function(label,opts,ans,unit){return {t:'sel',label:label,opts:opts,ans:ans,unit:unit}};
+var MC=function(opts,ans){return {t:'mc',opts:opts,ans:ans}};
+var SET=function(label,ans,unit){return {t:'set',label:label,ans:ans,unit:unit}};
+var SEQ=function(label,ans,unit){return {t:'seq',label:label,ans:ans,unit:unit}};
+var PLOT=function(ans,name,pts){return {t:'plot',ans:ans,name:name,pts:pts||[]}};
+var DT=['∣ (teilt)','∤ (teilt nicht)'];
+var RF=['richtig','falsch'];
+var EL=['∈','∉'];
+var QU=['I','II','III','IV'];
+var PK=['Primzahl','keine Primzahl'];
+
+/* ---------- Inhalte ---------- */
+var T=[
+/* 1 ---------------------------------------------------- */
+{id:'t1',icon:'➗',title:'Teiler, Vielfache & Teilbarkeitsregeln',short:'Teilermenge, Vielfache, ∣ und ∤, Ziffernsumme',
+erkl:'<div class="box"><b>Teiler:</b> Eine Zahl a ist ein Teiler von b, wenn b durch a ohne Rest teilbar ist.<br>Schreibweise: <b>3 ∣ 12</b> („3 teilt 12“) und <b>5 ∤ 12</b> („5 teilt 12 nicht“).</div>'+
+'<div class="box ex"><b>Teilermenge</b> = alle Teiler einer Zahl.<br>T₁₂ = {1, 2, 3, 4, 6, 12}<br><i>Tipp:</i> Suche die Teiler <b>paarweise</b>: 1·12, 2·6, 3·4. Die 1 und die Zahl selbst sind <b>immer</b> dabei.</div>'+
+'<div class="box"><b>Vielfache</b> sind die Ergebnisse der Einmaleins-Reihe: V₄ = {4, 8, 12, 16, …}.<br>Jede Zahl hat <b>unendlich viele</b> Vielfache, aber nur <b>endlich viele</b> Teiler.</div>'+
+'<h3>Teilbarkeitsregeln</h3><table class="t"><tr><th>Teilbar durch …</th><th>… wenn</th><th>Beispiel</th></tr>'+
+'<tr><td><b>2</b></td><td>die letzte Ziffer gerade ist (0, 2, 4, 6, 8)</td><td>346 ✓</td></tr>'+
+'<tr><td><b>5</b></td><td>die letzte Ziffer 0 oder 5 ist</td><td>715 ✓</td></tr>'+
+'<tr><td><b>10</b></td><td>die letzte Ziffer 0 ist</td><td>830 ✓</td></tr>'+
+'<tr><td><b>100</b></td><td>die letzten zwei Ziffern 00 sind</td><td>4500 ✓</td></tr>'+
+'<tr><td><b>3</b></td><td>die <b>Ziffernsumme</b> durch 3 teilbar ist</td><td>2 + 5 + 1 = 8 ✗ → 3 ∤ 251</td></tr>'+
+'<tr><td><b>9</b></td><td>die <b>Ziffernsumme</b> durch 9 teilbar ist</td><td>2+5+1+1 = 9 ✓ → 9 ∣ 2511</td></tr></table>',
+ueb:[
+ {q:'Schreibe die Teilermenge von <b>18</b> an.',parts:[SET('T₁₈ = {',[1,2,3,6,9,18],'}')],hint:'Suche die Teiler paarweise: 1·18, 2·9, 3·6. Vergiss die 1 und die 18 nicht!'},
+ {q:'Schreibe die ersten fünf Vielfachen von <b>7</b> an.',parts:[SET('V₇ = {',[7,14,21,28,35],', … }')],hint:'Das ist die 7er-Reihe: 1·7, 2·7, 3·7, …'},
+ {q:'Setze ∣ (teilt) oder ∤ (teilt nicht) ein. Nutze die Teilbarkeitsregeln!',parts:[SEL('3',DT,0,'72'),SEL('5',DT,1,'346'),SEL('9',DT,0,'405'),SEL('100',DT,1,'4050')],hint:'Bei 3 und 9: Ziffernsumme ausrechnen. Bei 5: letzte Ziffer. Bei 100: letzte zwei Ziffern.'},
+ {q:'Warum gilt <b>9 ∣ 738</b>? Wähle die richtige Begründung.',parts:[MC(['Die Ziffernsumme ist 7 + 3 + 8 = 18, und 18 ist durch 9 teilbar.','Die Zahl endet auf 8, also ist sie gerade.','7 + 3 = 10, und 10 ist durch 9 teilbar.','Die Zahl hat drei Ziffern.'],0)],hint:'Für 9 rechnest du die Ziffernsumme aus und prüfst, ob die durch 9 teilbar ist.'},
+ {q:'Richtig oder falsch?',parts:[SEL('Jede Zahl hat unendlich viele Vielfache.',RF,0),SEL('12 ist ein Teiler von 4.',RF,1),SEL('Die Ziffernsumme von 3402 ist 9.',RF,0),SEL('Jede Zahl, die durch 5 teilbar ist, ist auch durch 10 teilbar.',RF,1)],hint:'Ziffernsumme: 3+4+0+2. Und: Ist 15 durch 5 teilbar? Durch 10?',why:'12 ist ein <b>Vielfaches</b> von 4 (nicht ein Teiler). 15 ist durch 5, aber nicht durch 10 teilbar.'}
+],
+zus:[]},
+/* 2 ---------------------------------------------------- */
+{id:'t2',icon:'🔢',title:'Primzahlen',short:'Was ist eine Primzahl? Erkennen & begründen',
+erkl:'<div class="box"><b>Primzahl</b> = eine Zahl mit <b>genau zwei Teilern</b>: der 1 und sich selbst.<br>Beispiele: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29 …</div>'+
+'<div class="box gold"><b>Wichtig:</b><br>• Die <b>1</b> ist <b>keine</b> Primzahl (sie hat nur <i>einen</i> Teiler).<br>• Die <b>2</b> ist die <b>einzige gerade</b> Primzahl.<br>• Nicht jede ungerade Zahl ist eine Primzahl (z. B. 9 = 3 · 3).</div>'+
+'<div class="box ex"><b>So prüfst du eine Zahl (z. B. 29):</b><br>Ist sie durch 2 teilbar? Nein. Durch 3 (Ziffernsumme 11)? Nein. Durch 5? Nein. 7·4 = 28, 7·5 = 35 – geht auch nicht.<br>→ Nur 1 und 29 sind Teiler → <b>29 ist eine Primzahl</b>.</div>'+
+'<div class="box"><b>Zusammengesetzte Zahl:</b> hat mehr als zwei Teiler, z. B. 15 = 3 · 5 (T₁₅ = {1, 3, 5, 15}).</div>',
+ueb:[
+ {q:'Primzahl oder keine Primzahl?',parts:[SEL('17',PK,0),SEL('21',PK,1),SEL('29',PK,0),SEL('33',PK,1)],hint:'Eine Primzahl hat nur 1 und sich selbst als Teiler. Bei 21 und 33 hilft die Ziffernsumme (3er-Regel).',why:'21 = 3·7 und 33 = 3·11.'},
+ {q:'Warum ist <b>29</b> eine Primzahl?',parts:[MC(['Sie hat genau zwei Teiler: 1 und 29.','Sie ist ungerade.','Sie ist durch 3 teilbar.','Ihre Ziffernsumme ist 11.'],0)],hint:'Denk an die Definition: Wie viele Teiler hat eine Primzahl?'},
+ {q:'Schreibe <b>alle</b> Primzahlen zwischen 10 und 30 an.',parts:[SET('{',[11,13,17,19,23,29],'}')],hint:'Streiche zuerst alle geraden Zahlen, dann die Vielfachen von 3 und von 5. Was übrig bleibt, prüfst du genau.'},
+ {q:'Richtig oder falsch?',parts:[SEL('Die Zahl 2 ist die einzige gerade Primzahl.',RF,0),SEL('Die Zahl 1 ist eine Primzahl.',RF,1),SEL('Jede ungerade Zahl ist eine Primzahl.',RF,1),SEL('Eine Primzahl hat genau zwei Teiler.',RF,0)],hint:'Zähle die Teiler: Wie viele hat die 1? Ist 9 eine Primzahl?'},
+ {q:'Eine der vier Zahlen ist <b>keine</b> Primzahl.',parts:[MC(['41','43','47','51'],3),N('Nenne einen Teiler von 51, der weder 1 noch 51 ist:',[3,17],'')],hint:'Rechne bei jeder Zahl die Ziffernsumme aus. Der gesuchte Teiler ist ein Teiler von 51 – probiere kleine Zahlen.',why:'51 = 3 · 17'}
+],
+zus:[]},
+/* 3 ---------------------------------------------------- */
+{id:'t3',icon:'🚌',title:'Gemeinsame Vielfache – Textaufgaben',short:'Wann treffen sich Busse, Lichter, Schwimmer?',
+erkl:'<div class="box"><b>Gemeinsame Vielfache:</b> Zahlen, die in <b>beiden</b> Vielfachen-Reihen vorkommen.<br>Das <b>kleinste</b> davon heißt <b>kgV</b> (kleinstes gemeinsames Vielfaches).</div>'+
+'<div class="box ex"><b>Beispiel:</b> Bus A fährt 4 Minuten, Bus B fährt 10 Minuten. Sie starten gleichzeitig. Wann sind beide wieder gleichzeitig am Start?<br>V₄ = {4, 8, 12, 16, <b>20</b>, …}<br>V₁₀ = {10, <b>20</b>, 30, …}<br>→ Nach <b>20 Minuten</b>.<br>Runden: Bus A 20 : 4 = <b>5</b> Runden, Bus B 20 : 10 = <b>2</b> Runden.</div>'+
+'<div class="box gold"><b>Tipp:</b> Schreibe die Vielfachen der <b>größeren</b> Zahl auf und prüfe bei jeder, ob die kleinere Zahl hineinpasst.</div>',
+ueb:[
+ {q:'Bus A braucht für seine Runde immer <b>6 Minuten</b>, Bus B immer <b>9 Minuten</b>. Beide fahren gleichzeitig am Hauptbahnhof los.',parts:[N('a) Nach wie vielen Minuten sind beide zum ersten Mal wieder gleichzeitig am Hauptbahnhof?',18,'Minuten'),N('b) Wie viele Runden ist Bus B bis dahin gefahren?',2,'Runden')],hint:'Schreibe V₆ und V₉ auf. Die erste Zahl, die in beiden vorkommt, ist die Lösung. Für b) teilst du durch die Rundenzeit von Bus B.',why:'V₆ = 6, 12, <b>18</b> … und V₉ = 9, <b>18</b> … → 18 Minuten. Bus B: 18 : 9 = 2 Runden.'},
+ {q:'Zug A fährt alle <b>10 Minuten</b> eine Runde, Zug B alle <b>15 Minuten</b>. Beide starten gleichzeitig.',parts:[N('a) Nach wie vielen Minuten sind beide zum ersten Mal wieder gleichzeitig am Start?',30,'Minuten'),N('b) Wie viele Runden ist Zug A bis dahin gefahren?',3,'Runden')],hint:'V₁₅ = 15, 30, 45 … – passt 10 hinein?'},
+ {q:'Eine rote Lampe blinkt alle <b>4 Sekunden</b>, eine grüne alle <b>6 Sekunden</b>. Jetzt blinken beide gleichzeitig. Nach wie vielen Sekunden blinken sie zum ersten Mal wieder gleichzeitig?',parts:[N('Antwort:',12,'Sekunden')],hint:'V₄ = 4, 8, 12 … und V₆ = 6, 12 … '},
+ {q:'Lena schwimmt eine Bahn in <b>20 Sekunden</b>, Tom in <b>30 Sekunden</b>. Sie starten gleichzeitig. Nach wie vielen Sekunden sind beide zum ersten Mal wieder gleichzeitig am Startrand?',parts:[N('Antwort:',60,'Sekunden')],hint:'Vielfache von 30: 30, 60, 90 … Passt 20 hinein?'},
+ {q:'Schreibe die ersten <b>drei gemeinsamen Vielfachen</b> von 4 und 6 an.',parts:[SET('{',[12,24,36],', … }')],hint:'V₄ = 4, 8, 12, 16 … und V₆ = 6, 12, 18 … Was kommt in beiden Reihen vor?'}
+],
+zus:[]},
+/* 4 ---------------------------------------------------- */
+{id:'t4',icon:'📏',title:'Längen umrechnen',short:'km, m, dm, cm, mm',
+erkl:'<div class="ladder"><span class="u">km</span><span class="a">·1000<br>→</span><span class="u">m</span><span class="a">·10<br>→</span><span class="u">dm</span><span class="a">·10<br>→</span><span class="u">cm</span><span class="a">·10<br>→</span><span class="u">mm</span></div>'+
+'<div class="box"><b>Nach rechts</b> (zu einer <b>kleineren</b> Einheit): <b>mal</b> rechnen → die Zahl wird größer.<br><b>Nach links</b> (zu einer <b>größeren</b> Einheit): <b>durch</b> rechnen → die Zahl wird kleiner.</div>'+
+'<table class="t"><tr><th>Merke</th><th>Beispiel</th></tr><tr><td>1 km = 1000 m</td><td>2,5 km = 2500 m</td></tr><tr><td>1 m = 10 dm = 100 cm = 1000 mm</td><td>3,4 m = 340 cm</td></tr><tr><td>1 dm = 10 cm, 1 cm = 10 mm</td><td>560 mm = 56 cm</td></tr></table>'+
+'<div class="box ex"><b>Rechenweg:</b> 46 mm in dm? mm → cm (: 10) = 4,6 cm → dm (: 10) = <b>0,46 dm</b>.<br>Es geht auch mit dem Komma: Es wird pro Schritt um <b>eine Stelle</b> verschoben (bei km ↔ m um drei Stellen).</div>',
+ueb:[
+ {q:'Wandle in <b>cm</b> um.',parts:[N('23 m =',2300,'cm'),N('4,5 m =',450,'cm'),N('0,6 m =',60,'cm')],hint:'m → dm → cm: zweimal mal 10, also mal 100. Das Komma wandert zwei Stellen nach rechts.'},
+ {q:'Wandle in <b>dm</b> um.',parts:[N('58 mm =',0.58,'dm'),N('340 mm =',3.4,'dm'),N('9 cm =',0.9,'dm')],hint:'mm → cm: durch 10. cm → dm: nochmal durch 10.',why:'58 mm = 5,8 cm = 0,58 dm'},
+ {q:'Wandle um.',parts:[N('2,5 km =',2500,'m'),N('0,8 km =',800,'m'),N('3500 m =',3.5,'km')],hint:'1 km = 1000 m. Das Komma wandert drei Stellen.'},
+ {q:'Ein Band ist <b>2,4 m</b> lang. Es werden <b>35 cm</b> abgeschnitten.',parts:[N('a) Wie viele cm sind 2,4 m?',240,'cm'),N('b) Wie viele cm bleiben übrig?',205,'cm')],hint:'Rechne zuerst 2,4 m in cm um, dann zieh die 35 cm ab.'},
+ {q:'Wandle jeweils in die angegebene Einheit um.',parts:[N('36,2 dm =',3.62,'m'),N('7 cm =',70,'mm'),N('120 mm =',12,'cm'),N('4 dm =',40,'cm')],hint:'Schau auf die Einheitenleiter: nach rechts mal, nach links durch.'}
+],
+zus:[]},
+/* 5 ---------------------------------------------------- */
+{id:'t5',icon:'🌡️',title:'Ganze Zahlen',short:'Zahlengerade, ordnen, Zahlenmengen, Rechnen mit Vorzeichen',
+erkl:'<div class="box"><b>Zahlengerade:</b> Nach <b>rechts</b> werden die Zahlen größer, nach <b>links</b> kleiner. Negative Zahlen liegen links von der 0.<br>Je weiter links, desto <b>kleiner</b>: −8 &lt; −3 &lt; 0 &lt; 5.</div>'+
+'<div class="box"><b>Zahlenmengen:</b><br>ℕ = {0, 1, 2, 3, …} (natürliche Zahlen)<br>ℤ = alle ganzen Zahlen (… −2, −1, 0, 1, 2 …)<br>ℤ⁺ = positive ganze Zahlen (<b>ohne</b> 0), ℤ⁻ = negative ganze Zahlen (ohne 0)<br>∈ heißt „ist Element von“, ∉ heißt „ist kein Element von“.</div>'+
+'<div class="box ex"><b>Rechnen mit Vorzeichen</b><br>• <b>Gleiche Vorzeichen:</b> addieren, Vorzeichen bleibt: −14 − 7 = <b>−21</b><br>• <b>Verschiedene Vorzeichen:</b> die kleinere Zahl von der größeren abziehen, das Vorzeichen der <b>größeren</b> Zahl bleibt: −8 + 19 = <b>11</b>, −23 + 11 = <b>−12</b></div>'+
+'<div class="box"><b>Mitte zweier Zahlen:</b> Abstand ausrechnen, halbieren, zur kleineren addieren.<br>Zwischen −14 und 4: Abstand 18, Hälfte 9, −14 + 9 = <b>−5</b>.</div>'+
+'<div class="box gold"><b>Tipp zum Eintippen:</b> Das Minus schreibst du mit der Taste „−“ (Bindestrich) direkt vor die Zahl, z. B. −7.</div>',
+ueb:[
+ {q:'Welche Zahlen sind auf der Zahlengerade markiert?',fig:numlineSVG([{n:'A',x:-7},{n:'B',x:-2},{n:'C',x:5}]),parts:[N('A =',-7,''),N('B =',-2,''),N('C =',5,'')],hint:'Die 0 ist die Mitte. Zähle von dort in Einerschritten nach links (negativ) oder rechts (positiv).'},
+ {q:'Ordne die Zahlen der Größe nach. Beginne mit der <b>kleinsten</b>.<br><b>3, −6, 0, −9, −1</b>',parts:[SEQ('Geordnet:',[-9,-6,-1,0,3],'')],hint:'Je weiter links auf der Zahlengerade, desto kleiner. Welche Zahl liegt am weitesten links?'},
+ {q:'Setze ∈ oder ∉ ein.',parts:[SEL('+8',EL,0,'ℤ⁺'),SEL('−3',EL,1,'ℕ'),SEL('0',EL,1,'ℤ⁻')],hint:'ℕ hat keine negativen Zahlen. ℤ⁺ und ℤ⁻ enthalten die 0 nicht.'},
+ {q:'Berechne. Achte auf die Vorzeichen.',parts:[N('−6 + 15 =',9,''),N('−12 − 5 =',-17,''),N('−20 + 8 =',-12,'')],hint:'Gleiche Vorzeichen: addieren. Verschiedene: abziehen, Vorzeichen der größeren Zahl (ohne Vorzeichen) übernehmen.'},
+ {q:'Gegeben sind die Zahlen: <b>−8, 5, −12, 0, 9, −3</b>.',parts:[N('Höchster Wert (Maximum):',9,''),N('Niedrigster Wert (Minimum):',-12,''),N('Welche Zahl liegt genau in der Mitte zwischen −10 und 6?',-2,'')],hint:'Maximum = ganz rechts auf der Zahlengerade. Mitte: Abstand von −10 bis 6 ist 16, die Hälfte ist 8.'}
+],
+zus:[]},
+/* 6 ---------------------------------------------------- */
+{id:'t6',icon:'📍',title:'Koordinatensystem',short:'Punkte ablesen, einzeichnen, Quadranten',
+erkl:'<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start"><div style="flex:1 1 220px">'+gridSVG({quad:true})+'</div><div style="flex:1 1 240px">'+
+'<div class="box"><b>x-Achse</b> = waagrecht, <b>y-Achse</b> = senkrecht. Sie treffen sich im <b>Ursprung O(0|0)</b>.</div>'+
+'<div class="box ex"><b>Punkt P(x|y):</b> Zuerst x (waagrecht laufen), dann y (senkrecht rauf oder runter).<br>Beispiel: P(−3|2) → 3 nach links, 2 nach oben.</div></div></div>'+
+'<table class="t"><tr><th>Quadrant</th><th>x</th><th>y</th><th>Lage</th></tr><tr><td><b>I</b></td><td>+</td><td>+</td><td>rechts oben</td></tr><tr><td><b>II</b></td><td>−</td><td>+</td><td>links oben</td></tr><tr><td><b>III</b></td><td>−</td><td>−</td><td>links unten</td></tr><tr><td><b>IV</b></td><td>+</td><td>−</td><td>rechts unten</td></tr></table>'+
+'<p class="sub">Die Quadranten werden gegen den Uhrzeigersinn nummeriert, rechts oben beginnend. Punkte auf den Achsen liegen in keinem Quadranten.</p>',
+ueb:[
+ {q:'Gib die Koordinaten der Punkte A, B und C an.',fig:gridSVG({pts:[{n:'A',x:3,y:2},{n:'B',x:-4,y:3},{n:'C',x:-2,y:-4}]}),parts:[N('A (',3,'|'),N('',2,')'),N('B (',-4,'|'),N('',3,')'),N('C (',-2,'|'),N('',-4,')')],sol:'A(3|2), B(−4|3), C(−2|−4)',hint:'Erst waagrecht ablesen (x), dann senkrecht (y). Nach links und nach unten sind die Werte negativ.'},
+ {q:'Zeichne den Punkt <b>D(−3|3)</b> ein: Klicke (tippe) auf die richtige Stelle im Koordinatensystem.',parts:[PLOT([-3,3],'D')],hint:'3 Schritte nach links (x = −3), dann 3 Schritte nach oben (y = 3).'},
+ {q:'Zeichne den Punkt <b>E(2|−4)</b> ein.',parts:[PLOT([2,-4],'E')],hint:'2 Schritte nach rechts, dann 4 Schritte nach unten.'},
+ {q:'In welchem Quadranten liegt der Punkt?',parts:[SEL('P(−2|5) liegt im Quadranten',QU,1),SEL('Q(4|−1) liegt im Quadranten',QU,3),SEL('R(−3|−3) liegt im Quadranten',QU,2),SEL('S(1|4) liegt im Quadranten',QU,0)],hint:'Schau auf die Vorzeichen von x und y – siehe Tabelle in der Erklärung.'},
+ {q:'Die Punkte <b>A(1|1)</b>, <b>B(4|1)</b> und <b>C(4|3)</b> sind drei Ecken eines Rechtecks. Welche Koordinaten hat der vierte Punkt D?',fig:gridSVG({pts:[{n:'A',x:1,y:1},{n:'B',x:4,y:1},{n:'C',x:4,y:3}]}),parts:[N('D (',1,'|'),N('',3,')')],sol:'D(1|3)',hint:'D liegt senkrecht über A und waagrecht neben C. Welche x- und y-Werte passen?'}
+],
+zus:[]},
+/* 7 ---------------------------------------------------- */
+
+{id:'tz',bonus:true,icon:'★',title:'Zusatz-Kapitel',short:'Querschnitt durch alle Themen – etwas schwerer',erkl:'',
+ueb:[
+ {q:'<b>Teiler & Teilbarkeit:</b> Schreibe die Teilermenge von 36 an. Außerdem: Bei der Zahl <b>52_</b> fehlt die letzte Ziffer. Welche Ziffern kannst du einsetzen, damit die Zahl durch 3 teilbar ist? Nenne <b>alle</b>.',parts:[SET('T₃₆ = {',[1,2,3,4,6,9,12,18,36],'}'),SET('Mögliche Ziffern:',[2,5,8],'')],hint:'T₃₆: Paare 1·36, 2·18, 3·12 … bis 6·6. Bei 52_: 5 + 2 = 7 – welche Ziffer bringt die Summe in die 3er-Reihe (9, 12, 15, …)?'},
+ {q:'<b>Primzahlen:</b> Primzahlzwillinge sind zwei Primzahlen, die sich um genau 2 unterscheiden (z. B. 3 und 5).',parts:[MC(['7 und 9','13 und 17','17 und 19','23 und 27'],2),N('Wie viele Primzahlen gibt es zwischen 30 und 50?',5,''),MC(['Ja, 91 ist eine Primzahl.','Nein, 91 = 7 · 13.'],1)],hint:'Beide Zahlen müssen Primzahlen sein UND der Abstand muss 2 sein. Zwischen 30 und 50: nur ungerade, nicht auf 5, Ziffernsumme nicht durch 3 – und die 7er-Reihe nicht vergessen (49!). Zuletzt: Ist 91 eine Primzahl? Probiere die 7er-Reihe.',why:'Zwischen 30 und 50: 31, 37, 41, 43, 47. Und 91 = 7 · 13.'},
+ {q:'<b>Gemeinsame Vielfache:</b> Drei Busse starten gleichzeitig. Sie brauchen für eine Runde <b>4, 6 und 8 Minuten</b>. Bus A (8 Minuten) und Bus B (12 Minuten) starten außerdem um 8:00 Uhr gleichzeitig.',parts:[N('a) Nach wie vielen Minuten sind die drei Busse (4, 6, 8 Minuten) zum ersten Mal wieder gleichzeitig am Start?',24,'Minuten'),N('b) Wie oft treffen sich Bus A (8 Min.) und Bus B (12 Min.) in der ersten Stunde wieder am Start? (Der Start zählt nicht mit.)',2,'Mal')],hint:'a) Suche eine Zahl, die in V₄, V₆ UND V₈ vorkommt. b) Das erste Treffen ist nach 24 Minuten. Wie oft passt das in 60 Minuten?',why:'b) Treffen nach 24 und 48 Minuten (72 wäre schon nach der Stunde).'},
+ {q:'<b>Längen:</b> Wandle um.',parts:[N('0,045 km =',45,'m'),N('2 km 30 m =',2030,'m'),N('1,2 m + 35 cm =',155,'cm')],hint:'0,045 km: Komma drei Stellen nach rechts. 2 km 30 m: erst 2 km in m umwandeln, dann + 30. Bei der letzten: alles in cm.'},
+ {q:'<b>Ganze Zahlen:</b> Rechne mit mehreren Zahlen hintereinander und mit größeren Zahlen.',parts:[N('−15 + 8 − 6 =',-13,''),N('12 − 20 + 5 =',-3,''),N('−250 + 130 =',-120,''),N('340 − 520 =',-180,'')],hint:'Mehrere Zahlen: von links nach rechts, immer nur zwei auf einmal (−15 + 8 = ?, dann − 6). Größere Zahlen: genauso wie bei kleinen – rechne zuerst ohne Vorzeichen (520 − 340) und überlege dann, welches Vorzeichen das Ergebnis hat.'},
+ {q:'<b>Koordinatensystem – Spiegeln:</b><div class="box"><b>Spiegeln an einer Achse:</b> Der Punkt „klappt“ über die Achse auf die andere Seite und hat danach denselben Abstand zur Achse.<br>• <b>an der x-Achse:</b> x bleibt, y wechselt das Vorzeichen: (4|1) → (4|−1)<br>• <b>an der y-Achse:</b> y bleibt, x wechselt das Vorzeichen: (4|1) → (−4|1)</div>Spiegle den Punkt <b>P(3|−2)</b> an der <b>x-Achse</b> (das ergibt P′) und den ursprünglichen Punkt P außerdem an der <b>y-Achse</b> (das ergibt P″).',fig:gridSVG({pts:[{n:'P',x:3,y:-2}]}),parts:[N('P′ (',3,'|'),N('',2,')'),N('P″ (',-3,'|'),N('',-2,')')],sol:'P′(3|2) und P″(−3|−2)',hint:'Spiegeln an der x-Achse: x bleibt, y wechselt das Vorzeichen. An der y-Achse: y bleibt, x wechselt das Vorzeichen.'},
+ {q:'<b>Temperatur:</b> Nachts hat es <b>−6 °C</b>, mittags <b>+7 °C</b>, am Abend <b>−3 °C</b>.',parts:[N('a) Um wie viel Grad ist es bis Mittag gestiegen?',13,'°C'),N('b) Um wie viel Grad ist es von Mittag bis zum Abend gefallen?',10,'°C')],hint:'Zeichne dir eine Zahlengerade (wie ein Thermometer) und zähle die Schritte.'}
+],
+zus:[]}
+];
+
+/* ---------- Auswertung ---------- */
+function evalPart(p,v){
+  if(p.t==='num'){
+    var A=[].concat(p.ans),n=nums(v),ok=n.length===1&&A.some(function(a){return Math.abs(a-n[0])<1e-9});
+    if(!ok){var th=thousands(v);ok=th!==null&&A.some(function(a){return a>=1000&&a===th})}
+    return ok;
+  }
+  if(p.t==='sel'||p.t==='mc')return +v===p.ans;
+  if(p.t==='set'){var a=intList(v).filter(function(x,i,r){return r.indexOf(x)===i}).sort(function(x,y){return x-y});var b=p.ans.slice().sort(function(x,y){return x-y});return a.length===b.length&&a.every(function(x,i){return x===b[i]})}
+  if(p.t==='seq'){var c=intList(v);return c.length===p.ans.length&&c.every(function(x,i){return x===p.ans[i]})}
+  if(p.t==='plot')return v===p.ans.join('|');
+  return false;
+}
+function partSol(p){
+  if(p.t==='num')return fmt([].concat(p.ans)[0])+(p.unit&&p.unit.length>1?' '+p.unit:'');
+  if(p.t==='sel'||p.t==='mc')return p.opts[p.ans];
+  if(p.t==='set')return '{ '+p.ans.map(fmt).join(', ')+' }';
+  if(p.t==='seq')return p.ans.map(fmt).join(' < ');
+  if(p.t==='plot')return '('+fmt(p.ans[0])+'|'+fmt(p.ans[1])+')';
+}
+
+/* ---------- Zustand ---------- */
+var S={view:'home',ti:0,tab:'erkl',name:''};
+var ST={},REG={};
+T.forEach(function(t,ti){['ueb','zus'].forEach(function(kind){t[kind].forEach(function(task,i){var k=t.id+(kind==='ueb'?'u':'z')+i;REG[k]={task:task,ti:ti,kind:kind,i:i};task.k=k})})});
+function getSt(k){return ST[k]||(ST[k]={tries:0,status:null,first:false,vals:{},marks:{},hint:false,msg:''})}
+
+/* ---------- Darstellung: Aufgabenkarte ---------- */
+function partHTML(k,p,j,st){
+  var id=k+'_'+j,v=st.vals[j],dis=st.status?' disabled':'',m=st.marks[j];
+  var cls=m===true?'ok':m===false?'bad':'';
+  if(p.t==='num'&&(p.unit==='|'||p.unit===')'))cls+=' inl';
+  var h='<div class="part '+cls+'">';
+  if(p.label)h+='<span class="pl">'+p.label+'</span>';
+  if(p.t==='num'||p.t==='set'||p.t==='seq'){
+    h+='<input id="'+id+'" class="inp '+p.t+'" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="'+esc(v||'')+'"'+dis+'>';
+    if(p.unit)h+='<span class="unit">'+p.unit+'</span>';
+  }else if(p.t==='sel'){
+    h+='<select id="'+id+'"'+dis+'><option value="">?</option>'+p.opts.map(function(o,i){return '<option value="'+i+'"'+(v!==undefined&&v!==''&&+v===i?' selected':'')+'>'+o+'</option>'}).join('')+'</select>';
+    if(p.unit)h+='<span class="unit" style="color:inherit">'+p.unit+'</span>';
+  }else if(p.t==='mc'){
+    h+='<div class="mc">'+p.opts.map(function(o,i){return '<label class="opt"><input type="radio" name="'+id+'" value="'+i+'"'+(v!==undefined&&v!==''&&+v===i?' checked':'')+dis+'><span>'+o+'</span></label>'}).join('')+'</div>';
+  }else if(p.t==='plot'){
+    var mark=v?v.split('|').map(Number):null;
+    h+='<div style="width:100%">'+gridSVG({pts:p.pts,click:st.status?null:(k+'|'+j),mark:mark,markCls:m===true?'ok':m===false?'bad':'',name:p.name,ans:(st.status==='fail'?p.ans:null)})+
+       '<div class="sub" style="margin:4px 0 0" id="rd_'+id+'">'+(mark?'Gewählt: '+p.name+'('+fmt(mark[0])+'|'+fmt(mark[1])+')':'Noch nichts gewählt – tippe ins Koordinatensystem.')+'</div></div>';
+  }
+  if(m===true)h+='<span class="mk ok">✓</span>';
+  if(m===false)h+='<span class="mk bad">✗</span>';
+  return h+'</div>'+(p.t==='num'&&p.unit===')'?'<br>':'');
+}
+function cardHTML(k){
+  var r=REG[k],task=r.task,st=getSt(k);
+  var h='<div class="card task '+(st.status||'')+'" id="card_'+k+'"><div class="tnum">'+(r.kind==='zus'?'★':(r.i+1))+'</div><div class="tbody"><div class="q">'+task.q+'</div>';
+  if(task.fig)h+='<div class="fig">'+task.fig+'</div>';
+  task.parts.forEach(function(p,j){h+=partHTML(k,p,j,st)});
+  if(st.msg&&!st.status)h+='<div class="fb msg">'+st.msg+'</div>';
+  if(st.status==='ok'){h+='<div class="fb good"><b>✓ Richtig!</b>'+(st.first?'':' (im zweiten Versuch)')+(task.why?'<br>'+task.why:'')+'</div>'}
+  else if(st.status==='fail'){
+    h+='<div class="fb sol"><b>So geht es:</b><br>'+(task.sol?'<b>'+task.sol+'</b>':task.parts.map(function(p){var l=strip(p.label||'');return (l?l+' ':'')+'<b>'+partSol(p)+'</b>'}).join('<br>'))+(task.why?'<br>'+task.why:'')+'<br><i>Lies nochmal in der Erklärung nach – dann klappt es beim nächsten Mal.</i></div>';
+  }else{
+    if(st.hint)h+='<div class="fb hint"><b>Noch nicht ganz.</b> Tipp: '+task.hint+'</div>';
+    h+='<div style="margin-top:10px"><button class="btn small" onclick="check(\''+k+'\')">'+(st.hint?'Nochmal prüfen':'Prüfen')+'</button></div>';
+  }
+  return h+'</div></div>';
+}
+function readVals(k){
+  var task=REG[k].task,st=getSt(k),vals={};
+  task.parts.forEach(function(p,j){
+    var id=k+'_'+j,v='';
+    if(p.t==='mc'){var r=document.querySelector('input[name="'+id+'"]:checked');v=r?r.value:''}
+    else if(p.t==='plot'){v=st.vals[j]||''}
+    else{var el=document.getElementById(id);v=el?el.value.trim():(st.vals[j]||'')}
+    vals[j]=v;
+  });
+  return vals;
+}
+function snapshot(){
+  document.querySelectorAll('.task').forEach(function(c){var k=c.id.slice(5);var st=getSt(k);if(!st.status)st.vals=readVals(k)});
+}
+function check(k){
+  var task=REG[k].task,st=getSt(k);
+  var vals=readVals(k);st.vals=vals;
+  var missing=Object.keys(vals).some(function(j){return vals[j]===''});
+  if(missing){st.msg='Bitte fülle zuerst alle Felder aus.';rerender(k);return}
+  st.msg='';
+  var all=true;
+  task.parts.forEach(function(p,j){var ok=evalPart(p,vals[j]);st.marks[j]=ok;if(!ok)all=false});
+  if(all){st.status='ok';st.first=st.tries===0}
+  else{st.tries++;st.hint=true;if(st.tries>=2)st.status='fail'}
+  rerender(k);
+}
+function rerender(k){
+  var el=document.getElementById('card_'+k);
+  if(el){el.outerHTML=cardHTML(k)}
+  var pg=document.getElementById('prog');if(pg)pg.outerHTML=progHTML(S.ti);
+}
+
+/* ---------- Seiten ---------- */
+function dotsHTML(ti){
+  var t=T[ti],h='<div class="dots">';
+  t.ueb.forEach(function(x,i){var st=ST[x.k];h+='<span class="dot'+(t.bonus?' star':'')+' '+(st&&st.status?st.status:'')+'">'+(st&&st.status==='ok'?'✓':st&&st.status==='fail'?'✗':(i+1))+'</span>'});
+  return h+'</div>';
+}
+function homeHTML(){
+  var h='<h1>📐 Mathe-Übung</h1><p class="sub">Teilbarkeit & Primzahlen · Ganze Zahlen · Koordinatensystem</p>';
+  h+='<div class="steps"><div><b>1 · Thema wählen</b>Klicke auf die Themen, die deine Lehrperson dir genannt hat.</div><div><b>2 · Erklärung lesen</b>Zuerst kurz nachlesen, wie es geht.</div><div><b>3 · Üben</b>5 Aufgaben pro Thema. Du bekommst sofort eine Rückmeldung.</div></div>';
+  h+='<div class="tgrid">';
+  T.forEach(function(t,ti){if(t.bonus)return;h+='<button class="card tcard" onclick="openTopic('+ti+')"><div class="ic">'+t.icon+'</div><div class="tt">'+t.title+'</div><div class="ts">'+t.short+'</div>'+dotsHTML(ti)+'</button>'});
+  h+='</div>';
+  T.forEach(function(t,ti){if(!t.bonus)return;h+='<h2 style="margin-top:22px">★ Nur für Profis</h2><button class="card tcard bonus" onclick="openTopic('+ti+')"><div class="tt">'+t.icon+' '+t.title+'</div><div class="ts">'+t.short+'. Nur wenn deine Lehrperson es dir sagt.</div>'+dotsHTML(ti)+'</button>'});
+  h+='<div class="row"><button class="btn" onclick="openSummary()">Fertig? Zur Abschluss-Übersicht →</button></div>';
+  return h;
+}
+function progHTML(ti){
+  var list=T[ti].ueb;
+  var ok=list.filter(function(x){return ST[x.k]&&ST[x.k].status==='ok'}).length;
+  var done=list.filter(function(x){return ST[x.k]&&ST[x.k].status}).length;
+  return '<div id="prog" class="sub">'+ok+' von '+list.length+' richtig'+(done<list.length?' · '+(list.length-done)+' noch offen':' · alle bearbeitet')+'</div>';
+}
+function topicHTML(){
+  var t=T[S.ti];
+  var h='<button class="back" onclick="go(\'home\')">← Alle Themen</button><h1>'+t.icon+' '+t.title+'</h1>';
+  if(t.bonus){
+    h+='<div class="box gold"><b>★ Zusatz-Kapitel:</b> Ein Querschnitt durch alle Themen, etwas schwerer und ein Stück über das hinaus, was wir bisher gemacht haben. Probiere es einfach aus!</div>';
+    h+=progHTML(S.ti);
+    t.ueb.forEach(function(x){h+=cardHTML(x.k)});
+  }else{
+    h+='<div class="tabs"><button class="tab '+(S.tab==='erkl'?'on':'')+'" onclick="setTab(\'erkl\')">1 · Erklärung</button><button class="tab '+(S.tab==='ueb'?'on':'')+'" onclick="setTab(\'ueb\')">2 · Üben</button></div>';
+    if(S.tab==='erkl'){
+      h+='<div class="card">'+t.erkl+'</div><div class="row"><button class="btn" onclick="setTab(\'ueb\')">Jetzt üben →</button></div>';
+      return h;
+    }
+    h+=progHTML(S.ti);
+    t.ueb.forEach(function(x){h+=cardHTML(x.k)});
+  }
+  h+='<div class="row">';
+  if(!t.bonus)h+='<button class="btn sec" onclick="setTab(\'erkl\')">← Erklärung nochmal lesen</button>';
+  h+='<button class="btn sec" onclick="go(\'home\')">Anderes Thema</button><button class="btn" onclick="openSummary()">Zur Abschluss-Übersicht →</button></div>';
+  return h;
+}
+
+/* ---------- Abschluss ---------- */
+var HEFT=[
+ 'Schreibe T₂₄ und die ersten 5 Vielfachen von 8 in dein Heft. Prüfe dann mit den Teilbarkeitsregeln, ob 3 ∣ 918 gilt, und schreibe die Begründung dazu.',
+ 'Schreibe alle Primzahlen bis 30 in dein Heft. Erkläre in einem Satz, warum die 1 keine Primzahl ist und warum 51 keine Primzahl ist.',
+ 'Erfinde selbst eine Aufgabe mit zwei Bussen (oder zwei Lichtern), die gleichzeitig starten, und löse sie mit den Vielfachen im Heft.',
+ 'Zeichne die Einheitenleiter (km – m – dm – cm – mm) ins Heft. Wandle dann 3,6 m in dm, cm und mm um und 4500 m in km.',
+ 'Zeichne eine Zahlengerade von −10 bis 10 und markiere −8, −3, 0 und 5. Schreibe dann drei eigene Rechnungen mit Vorzeichen auf und löse sie.',
+ 'Zeichne ein Koordinatensystem ins Heft. Trage vier Punkte ein, in jedem Quadranten einen. Schreibe die Koordinaten und den Quadranten dazu.'
+];
+function stats(){
+  return T.map(function(t,ti){
+    var o={ti:ti,n:t.ueb.length,ok:0,att:0,first:0};
+    t.ueb.forEach(function(x){var s=ST[x.k];if(s&&s.status){o.att++;if(s.status==='ok'){o.ok++;if(s.first)o.first++}}});
+    return o;
+  });
+}
+function summaryHTML(){
+  var h='<button class="back" onclick="go(\'home\')">← Alle Themen</button><h1>🏁 Abschluss-Übersicht</h1>';
+  h+='<div class="card"><label for="nm"><b>Dein Name</b> <span class="sub">(nur für diese Übersicht, wird nirgends gespeichert)</span></label><br><input id="nm" class="nameinp" type="text" value="'+esc(S.name)+'" oninput="S.name=this.value;updSum()"></div>';
+  h+='<div class="box gold"><b>👉 Zeige diese Seite jetzt deiner Lehrperson.</b> Du musst nichts abschreiben oder kopieren.</div>';
+  h+='<div class="card"><div id="sumhead" style="font-weight:700;font-size:1.1rem;margin-bottom:4px"></div>';
+  var st=stats(),any=false;
+  st.forEach(function(o){
+    var t=T[o.ti],cls,txt,pct=o.ok/o.n*100;
+    if(!o.att)return;
+    else if(o.ok===o.n){cls='ok';txt='✓ Sitzt!'}
+    else if(o.ok>=o.n*0.6){cls='mid';txt='◐ Fast – noch kurz wiederholen'}
+    else{cls='low';txt='✗ Nochmal üben'}
+    if(o.att&&!t.bonus)any=true;
+    h+='<div class="srow"><div><b>'+t.icon+' '+t.title+'</b></div><div><div class="bar '+(cls==='mid'?'mid':cls==='low'?'low':'')+'"><i style="width:'+pct+'%"></i></div><span class="sub">'+o.ok+' von '+o.n+' richtig'+(o.att?' · '+o.first+' gleich beim 1. Versuch':'')+(o.att<o.n&&o.att?' · '+(o.n-o.att)+' offen':'')+'</span></div><div class="stat '+cls+'">'+txt+'</div></div>';
+  });
+  if(!st.some(function(o){return o.att}))h+='<p class="sub">Noch nichts bearbeitet.</p>';
+  h+='</div>';
+  h+='<h2>✏️ Abschlussaufgabe fürs Heft</h2>';
+  if(!any){h+='<p class="sub">Bearbeite zuerst ein paar Aufgaben, dann erscheint hier deine Heft-Aufgabe.</p>'}
+  else{
+    var need=st.filter(function(o){return !T[o.ti].bonus&&o.att&&o.ok<o.n});
+    if(need.length){
+      h+='<p>Schreibe diese Aufgaben ordentlich in dein Heft – für die Themen, die noch nicht ganz sitzen:</p>';
+      need.forEach(function(o){h+='<div class="heft"><b>'+T[o.ti].icon+' '+T[o.ti].title+'</b><br>'+HEFT[o.ti]+'</div>'});
+    }else{
+      h+='<div class="heft"><b>Super, alles richtig!</b><br>Wähle ein Thema und erfinde dazu <b>zwei eigene Aufgaben</b> mit Lösung ins Heft – eine leichte und eine knifflige.</div>';
+    }
+  }
+  h+='<div class="row"><button class="btn" onclick="go(\'home\')">Weiter üben</button></div>';
+  return h;
+}
+function updSum(){
+  var hd=document.getElementById('sumhead');if(hd)hd.textContent=(S.name?S.name+' · ':'')+new Date().toLocaleDateString('de-AT');
+}
+
+/* ---------- Navigation ---------- */
+function render(){
+  var a=document.getElementById('app');
+  a.innerHTML=S.view==='home'?homeHTML():S.view==='topic'?topicHTML():summaryHTML();
+  if(S.view==='summary')updSum();
+  window.scrollTo(0,0);
+}
+function go(v){snapshot();S.view=v;render()}
+function openTopic(ti){snapshot();S.view='topic';S.ti=ti;S.tab=T[ti].bonus?'ueb':'erkl';render()}
+function setTab(t){snapshot();S.tab=t;render()}
+function openSummary(){snapshot();S.view='summary';render()}
+
+if(typeof document!=='undefined'){
+  document.addEventListener('click',function(e){
+    var svg=e.target.closest&&e.target.closest('svg[data-click]');if(!svg)return;
+    var parts=svg.getAttribute('data-click').split('|'),k=parts[0],j=parts[1],st=getSt(k);if(st.status)return;
+    var r=svg.getBoundingClientRect();
+    var px=(e.clientX-r.left)/r.width*360,py=(e.clientY-r.top)/r.height*360;
+    var x=Math.max(-5,Math.min(5,Math.round((px-180)/30))),y=Math.max(-5,Math.min(5,Math.round((180-py)/30)));
+    st.vals[j]=x+'|'+y;
+    var p=REG[k].task.parts[j];
+    svg.querySelector('.mk').innerHTML=markSVG(x,y,'',p.name);
+    var rd=document.getElementById('rd_'+k+'_'+j);if(rd)rd.textContent='Gewählt: '+p.name+'('+fmt(x)+'|'+fmt(y)+')';
+  });
+  render();
+}
+</script>
+</body>
+</html>
