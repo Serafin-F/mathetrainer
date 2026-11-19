@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quadratmeter in Quadratdezimeter</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: links die Zeichnung (1 m² als Quadrat), rechts drei Schieberegler untereinander.
+   Türkis = Länge, Orange = Fläche, wie in der Animation zuvor. */
+:root {
+  --bg: #f3f6fa;
+  --surface: #ffffff;
+  --fg: #13233a;
+  --muted: #56657a;
+  --line: #cbd5e1;
+  --len: #0a7d8c;
+  --len-soft: #d3eef1;
+  --area: #c2410c;
+  --area-soft: #ffe6d6;
+  --area-tile: #ff8a4c;
+  --on-accent: #ffffff;
+  --btn: #13233a;
+  --on-btn: #ffffff;
+  --font: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1622;
+    --surface: #16212f;
+    --fg: #e8eef6;
+    --muted: #9fb0c4;
+    --line: #2c3b4f;
+    --len: #46cfe0;
+    --len-soft: #123a42;
+    --area: #ff9a5c;
+    --area-soft: #4a2a17;
+    --area-tile: #e8702c;
+    --on-accent: #0e1622;
+    --btn: #e8eef6;
+    --on-btn: #0e1622;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1622;
+  --surface: #16212f;
+  --fg: #e8eef6;
+  --muted: #9fb0c4;
+  --line: #2c3b4f;
+  --len: #46cfe0;
+  --len-soft: #123a42;
+  --area: #ff9a5c;
+  --area-soft: #4a2a17;
+  --area-tile: #e8702c;
+  --on-accent: #0e1622;
+  --btn: #e8eef6;
+  --on-btn: #0e1622;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 16px;
+  padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+[hidden] { display: none !important; }
+.wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.eyebrow { margin: 0 0 4px; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.2rem); line-height: 1.15; font-weight: 800; text-wrap: balance; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 780px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.draw-card { padding: 8px; }
+.draw-card svg { display: block; width: 100%; height: auto; }
+.draw-card svg text { font-family: inherit; }
+.panel-card { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+
+.len-t { color: var(--len); font-weight: 800; }
+.area-t { color: var(--area); font-weight: 800; }
+
+.ctl { display: flex; flex-direction: column; gap: 4px; transition: opacity .2s ease; }
+.ctl.off { opacity: .5; }
+.ctl label { display: flex; gap: 10px; align-items: flex-start; font-size: 1.15rem; font-weight: 700; line-height: 1.3; }
+.num {
+  flex: none; width: 1.7em; height: 1.7em; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .95rem; font-weight: 800; color: var(--on-accent);
+}
+.num.len { background: var(--len); }
+.num.area { background: var(--area); }
+.ctl input[type="range"] { width: 100%; height: 40px; margin: 0; cursor: pointer; }
+.ctl input[type="range"]:disabled { cursor: not-allowed; }
+.ctl.len input { accent-color: var(--len); }
+.ctl.area input { accent-color: var(--area); }
+.ctl output { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.hint { font-size: .95rem; color: var(--muted); font-weight: 500; min-height: 1.3em; }
+.sum { margin: 0; font-size: 2rem; font-weight: 800; color: var(--area); font-variant-numeric: tabular-nums; }
+.fb { margin: 0; min-height: 5.6em; font-size: 1.15rem; line-height: 1.4; font-weight: 500; text-wrap: pretty; }
+.fb b { font-weight: 800; }
+
+button {
+  font: inherit; font-weight: 700; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; min-height: 44px; cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--len); }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--len); outline-offset: 2px; }
+.nav { display: flex; padding-top: 14px; border-top: 1px solid var(--line); }
+
+/* Zeichnung */
+.sqbase { fill: var(--surface); stroke: var(--area); stroke-width: 4; }
+.bar { fill: var(--len); opacity: 0; transition: opacity .25s ease; }
+.bar.on { opacity: 1; }
+.tile { fill: var(--area-tile); opacity: 0; transition: opacity .3s ease; }
+.tile.on { opacity: 1; }
+.brk { fill: none; stroke: var(--len); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.lbl-len { fill: var(--len); font-weight: 800; }
+.halo { paint-order: stroke; stroke: var(--surface); stroke-width: 6px; stroke-linejoin: round; }
+.first-lbl { fill: var(--fg); font-weight: 800; opacity: 0; transition: opacity .3s ease; }
+.first-lbl.on { opacity: 1; }
+.hl { fill: none; stroke: var(--fg); stroke-width: 4; opacity: 0; transition: opacity .3s ease; }
+.hl.on { opacity: 1; }
+.rowhl { fill: none; stroke: var(--fg); stroke-width: 3; stroke-dasharray: 9 7; opacity: 0; transition: opacity .3s ease; }
+.rowhl.on { opacity: .85; }
+.center-lbl { fill: var(--fg); font-weight: 800; }
+@media (prefers-reduced-motion: reduce) {
+  .bar, .tile, .first-lbl, .hl, .rowhl, .ctl { transition: none !important; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Mathematik · Flächenmaße</p>
+    <h1>Wie viele dm² passen in 1 m²?</h1>
+  </header>
+
+  <div class="layout">
+    <section class="card draw-card" aria-label="Zeichnung">
+      <svg id="svg" viewBox="0 0 620 560" role="img" aria-label="Quadrat mit 1 m Seitenlänge, das mit Kästchen von 1 dm² Zeile für Zeile aufgefüllt wird">
+        <rect class="sqbase" x="110" y="70" width="400" height="400"/>
+        <g id="tiles"></g>
+        <rect id="rowHl" class="rowhl" x="106" y="66" width="408" height="48" rx="8"/>
+        <rect id="hl" class="hl" x="110" y="70" width="40" height="40"/>
+        <text id="firstLbl" class="first-lbl halo" x="130" y="95" text-anchor="middle" font-size="14">1 dm²</text>
+        <text class="center-lbl halo" x="310" y="285" text-anchor="middle" font-size="56">1 m²</text>
+
+        <!-- dm-Leisten oben und rechts -->
+        <g id="barsTop"></g>
+        <g id="barsRight"></g>
+        <text id="lblTop" class="lbl-len" x="310" y="38" text-anchor="middle" font-size="28"></text>
+        <text id="lblRight" class="lbl-len" x="580" y="278" text-anchor="middle" font-size="28"></text>
+
+        <!-- 1 m links und unten -->
+        <path class="brk" d="M78 70 H90 M84 70 V470 M78 470 H90"/>
+        <text class="lbl-len" x="44" y="280" text-anchor="middle" font-size="28">1 m</text>
+        <path class="brk" d="M110 490 V502 M110 496 H510 M510 490 V502"/>
+        <text class="lbl-len" x="310" y="538" text-anchor="middle" font-size="28">1 m</text>
+      </svg>
+    </section>
+
+    <section class="card panel-card" aria-label="Regler">
+      <div class="ctl len" id="c1">
+        <label for="nR"><span class="num len">1</span><span>Wie viele dm passen auf die Seite?</span></label>
+        <input id="nR" type="range" min="0" max="10" step="1" value="0">
+        <output id="nOut" for="nR" class="len-t">0 dm</output>
+      </div>
+
+      <div class="ctl area off" id="c2">
+        <label for="perR"><span class="num area">2</span><span>Wie viele dm² haben in einer Zeile Platz?</span></label>
+        <input id="perR" type="range" min="0" max="10" step="1" value="0" disabled aria-describedby="h2">
+        <output id="perOut" for="perR" class="area-t">0 dm²</output>
+        <span class="hint" id="h2">Stelle zuerst Regler 1 auf 10 dm.</span>
+      </div>
+
+      <div class="ctl area off" id="c3">
+        <label for="rowR"><span class="num area">3</span><span>Wie viele Zeilen brauchst du? Die Zeile wird kopiert.</span></label>
+        <input id="rowR" type="range" min="1" max="10" step="1" value="1" disabled aria-describedby="h3">
+        <output id="rowOut" for="rowR" class="area-t">1 Zeile</output>
+        <span class="hint" id="h3">Stelle zuerst Regler 2 auf 10 dm².</span>
+      </div>
+
+      <p class="sum" id="sum" aria-live="polite">0 dm²</p>
+      <p class="fb" id="fb" aria-live="polite"></p>
+
+      <div class="nav"><button id="reset" type="button">Neu starten</button></div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  var NS = 'http://www.w3.org/2000/svg';
+  function $(s) { return document.querySelector(s); }
+  function mk(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e);
+    return e;
+  }
+
+  var X0 = 110, Y0 = 70, T = 40;
+  var barsTop = [], barsRight = [], tiles = [];
+
+  for (var k = 0; k < 10; k++) {
+    barsTop.push(mk('rect', { 'class': 'bar', x: X0 + T * k + 2, y: 50, width: T - 4, height: 14, rx: 3 }, $('#barsTop')));
+    barsRight.push(mk('rect', { 'class': 'bar', x: 518, y: Y0 + T * k + 2, width: 14, height: T - 4, rx: 3 }, $('#barsRight')));
+  }
+  for (var r = 0; r < 10; r++) {
+    for (var c = 0; c < 10; c++) {
+      var rect = mk('rect', { 'class': 'tile', x: X0 + T * c + 2, y: Y0 + T * r + 2, width: T - 4, height: T - 4, rx: 3 }, $('#tiles'));
+      if (r > 0) rect.style.transitionDelay = (r * 45) + 'ms'; // Zeilen erscheinen nacheinander: "kopiert"
+      tiles.push({ el: rect, r: r, c: c });
+    }
+  }
+
+  var st = { n: 0, per: 0, rows: 1 };
+  var nR = $('#nR'), perR = $('#perR'), rowR = $('#rowR');
+
+  function render() {
+    barsTop.forEach(function (b, i) { b.classList.toggle('on', i < st.n); });
+    barsRight.forEach(function (b, i) { b.classList.toggle('on', i < st.n); });
+    $('#lblTop').textContent = st.n > 0 ? st.n + ' dm' : '';
+    $('#lblRight').textContent = st.n > 0 ? st.n + ' dm' : '';
+
+    tiles.forEach(function (t) { t.el.classList.toggle('on', t.c < st.per && t.r < st.rows); });
+    $('#firstLbl').classList.toggle('on', st.per >= 1);
+    $('#hl').classList.toggle('on', st.per >= 1 && st.rows === 1);
+    $('#rowHl').classList.toggle('on', st.per === 10 && st.rows < 10);
+
+    var c2on = st.n === 10, c3on = st.per === 10;
+    perR.disabled = !c2on; rowR.disabled = !c3on;
+    $('#c2').classList.toggle('off', !c2on);
+    $('#c3').classList.toggle('off', !c3on);
+    $('#h2').hidden = c2on;
+    $('#h3').hidden = c3on;
+
+    nR.value = st.n; perR.value = st.per; rowR.value = st.rows;
+    $('#nOut').textContent = st.n + ' dm';
+    $('#perOut').textContent = st.per + ' dm²';
+    $('#rowOut').textContent = st.rows + (st.rows === 1 ? ' Zeile' : ' Zeilen');
+
+    var total = st.per * st.rows;
+    $('#sum').textContent = st.per === 0 ? '0 dm²' : st.per + ' · ' + st.rows + ' = ' + total + ' dm²';
+
+    var f;
+    if (st.n === 0) f = 'Schiebe Regler 1 und miss die Seite Stück für Stück mit dm.';
+    else if (st.n < 10) f = 'Die Seite ist noch nicht voll. Schiebe weiter.';
+    else if (st.per === 0) f = '<b>10 dm</b> passen auf die Seite. Also gilt: <span class="len-t">1 m = 10 dm</span>. Jetzt Regler 2: Fülle eine Zeile mit Kästchen zu je 1 dm².';
+    else if (st.per < 10) f = 'Jedes Kästchen ist 1 dm lang und 1 dm breit, also <span class="area-t">1 dm²</span>. Die Zeile ist noch nicht voll.';
+    else if (st.rows === 1) f = 'Eine Zeile ist voll: <span class="area-t">10 dm²</span>. Jetzt kopieren wir die Zeile nach unten. Schiebe Regler 3.';
+    else if (st.rows < 10) f = st.rows + ' Zeilen mit je 10 dm² sind ' + total + ' dm². Das Quadrat ist noch nicht voll.';
+    else f = '10 Zeilen mit je 10 dm² sind 100 dm². Also gilt: <span class="area-t">1 m² = 100 dm²</span>. Darum ist die Umrechnungszahl bei Flächen 100.';
+    $('#fb').innerHTML = f;
+  }
+
+  nR.addEventListener('input', function () {
+    st.n = Number(nR.value);
+    if (st.n < 10) { st.per = 0; st.rows = 1; }
+    render();
+  });
+  perR.addEventListener('input', function () {
+    st.per = Number(perR.value);
+    if (st.per < 10) st.rows = 1;
+    render();
+  });
+  rowR.addEventListener('input', function () { st.rows = Number(rowR.value); render(); });
+  $('#reset').addEventListener('click', function () { st = { n: 0, per: 0, rows: 1 }; render(); });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
